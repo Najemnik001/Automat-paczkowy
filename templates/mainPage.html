@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Strona Główna</title>
+</head>
+<body>
+    <h1>Witaj, {{ user.username }}!</h1>
+
+    <!-- Przycisk do wylogowania -->
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Wyloguj się</button>
+    </form>
+
+    <h2>Paczki, które są nadane do Ciebie:</h2>
+    {% if received_parcels %}
+        <ul>
+            {% for parcel in received_parcels %}
+                <li>
+                    {{ parcel.name }} - {{ parcel.status }} - Rozmiar: {{ parcel.get_size_display }}
+                    {% if parcel.delivered_at %}
+                        - Dostarczona dnia {{ parcel.delivered_at }}
+                    {% endif %}
+                    {% if parcel.courier_number %}
+                        - Kurier: {{ parcel.courier_number }}
+                    {% endif %}
+                    {% if parcel.sent_to_machine %}
+                        - Paczkomat odbiorczy: {{ parcel.sent_to_machine }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Nie masz paczek jadących do Ciebie.</p>
+    {% endif %}
+
+    <h2>Twoje wysłane paczki:</h2>
+    {% if sent_parcels %}
+        <ul>
+            {% for parcel in sent_parcels %}
+                <li>
+                    {{ parcel.name }} - {{ parcel.status }} - Rozmiar: {{ parcel.get_size_display }}
+                    {% if parcel.delivered_at %}
+                        - Dostarczona dnia {{ parcel.delivered_at }}
+                    {% endif %}
+                    {% if parcel.courier_number %}
+                        - Kurier: {{ parcel.courier_number }}
+                    {% endif %}
+                    {% if parcel.sent_from_machine %}
+                        - Paczkomat nadawczy: {{ parcel.sent_from_machine }}
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Nie masz wysłanych paczek.</p>
+    {% endif %}
+
+    <!-- Przycisk do nadania paczki -->
+    <a href="{% url 'create_parcel' %}">
+        <button>Przejdź do nadawania paczki</button>
+    </a>
+
+</body>
+</html>
