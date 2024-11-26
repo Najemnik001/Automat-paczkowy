@@ -2,14 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Send Parcel</title>
+    <title>Create Parcel</title>
 </head>
 <body>
-    <h1>Send a Parcel</h1>
+    <h1>Create a Parcel</h1>
     <form method="POST">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit">Send</button>
+        <button type="submit">Create Parcel</button>
     </form>
+    {% if messages %}
+        <ul>
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    <a href="{% url 'main_page' %}">Back to Main Page</a>
 </body>
 </html>

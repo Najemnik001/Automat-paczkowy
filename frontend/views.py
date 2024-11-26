@@ -1,12 +1,16 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from .forms import RegisterForm
+from django.conf import settings
+from users.forms import RegisterForm
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from parcels.forms import ParcelForm
 from parcels.models import Parcel
 from django.contrib import messages
+
+
+User = settings.AUTH_USER_MODEL
+
 
 def register(request):
     if request.method == 'POST':
@@ -15,6 +19,10 @@ def register(request):
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
             user.save()
+
+            login(request, user)
+
+            messages.success(request, "Rejestracja zakończona sukcesem! Możesz teraz się zalogować.")
             return redirect('login')
     else:
         form = RegisterForm()
@@ -58,14 +66,14 @@ def create_parcel(request):
     if request.method == 'POST':
         form = ParcelForm(request.POST)
         if form.is_valid():
-            # Zapisz paczkę
             parcel = form.save(commit=False)
             parcel.sender = request.user
+            parcel.receiver = form.cleaned_data['receiver_email']
+            parcel.delivery_status = 'Shipment ordered'
             parcel.save()
             messages.success(request, "Parcel has been created successfully!")
-            return redirect('parcels:main')
+            return redirect('main_page')
         else:
-
             messages.error(request, "Error while creating parcel. Please check the details.")
     else:
         form = ParcelForm()

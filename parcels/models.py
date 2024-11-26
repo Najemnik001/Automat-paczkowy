@@ -8,8 +8,8 @@ class Parcel(models.Model):
     name = models.CharField(max_length=255)
 
     STATUS_CHOICES = [
-        ('sent', 'Sent'),
-        ('delivered', 'Delivered'),
+        ('shipment_ordered', 'Shipment ordered'),
+        ('stored_in_machine', 'Stored in machine'),
         ('picked_up_by_courier', 'Picked up by courier'),
         ('delivered_to_machine', 'Delivered to machine'),
         ('received_by_recipient', 'Received by recipient'),

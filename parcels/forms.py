@@ -9,7 +9,7 @@ class ParcelForm(forms.ModelForm):
 
     class Meta:
         model = Parcel
-        fields = ['sender', 'receiver', 'package_size', 'status', 'receiver_email', 'status', 'courier_number', 'sent_from_machine', 'sent_to_machine']
+        fields = ['name', 'package_size', 'receiver_email', 'sent_to_machine']
 
     def clean_receiver_email(self):
         email = self.cleaned_data.get('receiver_email')
