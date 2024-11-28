@@ -1,10 +1,20 @@
 from django.urls import path
 from . import views
+from .views import admin_panel, add_locker, edit_locker, delete_locker, delete_user, logout_view, admin_panel
 
 urlpatterns = [
     path('register/', views.register, name='register'),
     path('login/', views.user_login, name='login'),
-    path('main/', views.main_page, name='main_page'),
+    path('main_page/', views.main_page, name='main_page'),
+    path('admin_panel/', admin_panel, name='admin_panel'),
     path('create/', views.create_parcel, name='create_parcel'),
     path('logout/', views.logout_view, name='logout'),
+    path('admin_panel/', admin_panel, name='admin_panel'),
+    path('add_locker/', add_locker, name='add_locker'),
+    path('edit_locker/<int:locker_id>/', edit_locker, name='edit_locker'),
+    path('delete_locker/<int:locker_id>/', delete_locker, name='delete_locker'),
+    path('delete_user/<int:user_id>/', delete_user, name='delete_user'),
+
+
+
 ]

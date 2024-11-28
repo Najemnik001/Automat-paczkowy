@@ -26,7 +26,7 @@
                         - Kurier: {{ parcel.courier_number }}
                     {% endif %}
                     {% if parcel.sent_to_machine %}
-                        - Paczkomat odbiorczy: {{ parcel.sent_to_machine }}
+                        - Paczkomat odbiorczy: {{ parcel.sent_to_machine.name }} ({{ parcel.sent_to_machine.location }})
                     {% endif %}
                 </li>
             {% endfor %}
@@ -48,7 +48,7 @@
                         - Kurier: {{ parcel.courier_number }}
                     {% endif %}
                     {% if parcel.sent_from_machine %}
-                        - Paczkomat nadawczy: {{ parcel.sent_from_machine }}
+                        - Paczkomat nadawczy: {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
                     {% endif %}
                 </li>
             {% endfor %}

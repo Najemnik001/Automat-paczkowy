@@ -1,20 +1,33 @@
 from django import forms
-from django.contrib.auth import get_user_model
 from .models import Parcel
-
-User = get_user_model()
+from lockers.models import Locker
+from users.models import CustomUser
 
 class ParcelForm(forms.ModelForm):
     receiver_email = forms.EmailField(label="Receiver Email", required=True)
+    sent_from_locker = forms.ModelChoiceField(
+        queryset=Locker.objects.all(),
+        label="Sent From Locker",
+        required=True,
+        empty_label="Choose Locker to Send From",
+        widget=forms.Select(attrs={'placeholder': 'Search by name or location'})
+    )
+    sent_to_locker = forms.ModelChoiceField(
+        queryset=Locker.objects.all(),
+        label="Sent To Locker",
+        required=True,
+        empty_label="Choose Locker to Send To",
+        widget=forms.Select(attrs={'placeholder': 'Search by name or location'})
+    )
 
     class Meta:
         model = Parcel
-        fields = ['name', 'package_size', 'receiver_email', 'sent_to_machine']
+        fields = ['name', 'package_size', 'receiver_email', 'sent_from_locker', 'sent_to_locker']
 
     def clean_receiver_email(self):
         email = self.cleaned_data.get('receiver_email')
         try:
-            receiver = User.objects.get(email=email)
-        except User.DoesNotExist:
-            raise forms.ValidationError(f"Nie ma użytwkownika z takim emailem: {email}")
+            receiver = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            raise forms.ValidationError(f"Nie ma użytkownika z takim emailem: {email}")
         return receiver

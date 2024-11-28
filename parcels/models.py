@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from lockers.models import Locker  # Zaimportuj model Locker
 
 class Parcel(models.Model):
 
@@ -20,12 +21,14 @@ class Parcel(models.Model):
         ('large', 'Large'),
     ]
 
-    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='sent')
+    status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='shipment_ordered')
     package_size = models.CharField(max_length=6, choices=size_choices, default='small')
     delivered_at = models.DateTimeField(null=True, blank=True)
     courier_number = models.CharField(max_length=50, blank=True, null=True)
-    sent_from_machine = models.CharField(max_length=100, blank=True, null=True)
-    sent_to_machine = models.CharField(max_length=100, blank=True, null=True)
+
+    # Zmieniamy te pola na ForeignKey do modelu Locker
+    sent_from_machine = models.ForeignKey(Locker, related_name='sent_parcels', on_delete=models.CASCADE, null=True, blank=True)
+    sent_to_machine = models.ForeignKey(Locker, related_name='received_parcels', on_delete=models.CASCADE, null=True, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -33,4 +36,4 @@ class Parcel(models.Model):
         return f"Parcel {self.name} from {self.sender.username} to {self.receiver.username}"
 
     def is_delivered(self):
-        return self.status == 'delivered'
+        return self.status == 'received_by_recipient'
