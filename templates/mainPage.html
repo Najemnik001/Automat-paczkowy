@@ -19,7 +19,7 @@
         <ul>
             {% for parcel in received_parcels %}
                 <li>
-                    {{ parcel.name }} - {{ parcel.status }} - Rozmiar: {{ parcel.get_size_display }}
+                    {{ parcel.name }} - {{ parcel.status }}
                     {% if parcel.delivered_at %}
                         - Dostarczona dnia {{ parcel.delivered_at }}
                     {% endif %}
@@ -28,6 +28,11 @@
                     {% endif %}
                     {% if parcel.sent_to_machine %}
                         - Paczkomat odbiorczy: {{ parcel.sent_to_machine.name }} ({{ parcel.sent_to_machine.location }})
+                    {% endif %}
+
+                    {% if parcel.status == 'delivered_to_machine' %}
+                        <!-- Przycisk do odbioru paczki -->
+                        <button class="receive_parcel" data-parcel-id="{{ parcel.id }}">Odbierz paczkę</button>
                     {% endif %}
                 </li>
             {% endfor %}
@@ -41,7 +46,7 @@
         <ul>
             {% for parcel in sent_parcels %}
                 <li>
-                    {{ parcel.name }} - {{ parcel.status }} - Rozmiar: {{ parcel.get_size_display }}
+                    {{ parcel.name }} - {{ parcel.status }}
                     {% if parcel.delivered_at %}
                         - Dostarczona dnia {{ parcel.delivered_at }}
                     {% endif %}
@@ -51,9 +56,9 @@
                     {% if parcel.sent_from_machine %}
                         - Paczkomat nadawczy: {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
                     {% endif %}
-                    
+
                     {% if parcel.status == 'shipment_ordered' %}
-                        <!-- Przyciski do zmiany statusu na 'stored_in_machine' -->
+                        <!-- Przycisk do nadania paczki -->
                         <button class="store_in_machine" data-parcel-id="{{ parcel.id }}">Przekaż paczkę do paczkomatu</button>
                     {% endif %}
                 </li>
@@ -73,9 +78,7 @@
             $(".store_in_machine").click(function(){
                 var parcelId = $(this).data('parcel-id');
                 alert("Umieść paczkę w automacie");
-                // Wyślij zapytanie AJAX do serwera
                 $.ajax({
-                    
                     url: "{% url 'mock_store_parcel' %}",
                     type: "POST",
                     data: {
@@ -84,15 +87,34 @@
                     },
                     success: function(response) {
                         alert("Paczka została umieszczona w skrytce!");
-                            location.reload();
+                        location.reload();
                     },
                     error: function() {
                         alert("Wystąpił problem podczas procesu.");
                     }
                 });
             });
+
+            $(".receive_parcel").click(function(){
+                var parcelId = $(this).data('parcel-id');
+                alert("Otwórz skrytkę i odbierz paczkę");
+                $.ajax({
+                    url: "{% url 'mock_receive_parcel' %}",  // <-- Dodaj ten widok w urls.py
+                    type: "POST",
+                    data: {
+                        'parcel_id': parcelId,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        alert("Przesyłka odebrana. Dziękujemy za skorzystanie z naszych usług!");
+                        location.reload();
+                    },
+                    error: function() {
+                        alert("Wystąpił problem podczas odbioru paczki.");
+                    }
+                });
+            });
         });
     </script>
-
 </body>
 </html>

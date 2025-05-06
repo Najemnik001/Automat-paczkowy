@@ -14,6 +14,7 @@ from django.db.models import Q
 from lockers.forms import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.utils import timezone
 import time
 
 User = settings.AUTH_USER_MODEL
@@ -118,18 +119,29 @@ def mock_store_parcel(request):
         parcel_id = request.POST.get('parcel_id')
         try:
             parcel = Parcel.objects.get(id=parcel_id)
-
             time.sleep(5)
-
             parcel.status = 'stored_in_machine'
             parcel.save()
-
             return JsonResponse({'success': True})
-
         except Parcel.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Paczka nie została znaleziona.'})
-
     return JsonResponse({'success': False, 'message': 'Nieprawidłowa metoda zapytania.'})
+
+@csrf_exempt
+def mock_receive_parcel(request):
+    if request.method == 'POST':
+        parcel_id = request.POST.get('parcel_id')
+        try:
+            parcel = Parcel.objects.get(id=parcel_id)
+            time.sleep(5)
+            parcel.status = 'received_by_recipient'
+            parcel.delivered_at = timezone.now()
+            parcel.save()
+            return JsonResponse({'success': True})
+        except Parcel.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Paczka nie istnieje'})
+    return JsonResponse({'success': False, 'message': 'Błędna metoda HTTP'})
+
 
 def is_admin(user):
     return user.is_authenticated and user.role == 'admin'
@@ -282,6 +294,7 @@ def courier_view(request):
 
         if new_status in ['picked_up_by_courier', 'delivered_to_machine']:
             parcel.status = new_status
+            parcel.courier_number = request.user
             parcel.save()
             messages.success(request, f"Zmieniono status paczki {parcel.name} na {parcel.get_status_display()}.")
 
