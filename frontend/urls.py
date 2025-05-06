@@ -8,6 +8,7 @@ urlpatterns = [
     path('main_page/', views.main_page, name='main_page'),
     path('admin_panel/', admin_panel, name='admin_panel'),
     path('create/', views.create_parcel, name='create_parcel'),
+    path('mock-store-parcel/', views.mock_store_parcel, name='mock_store_parcel'),
     path('logout/', views.logout_view, name='logout'),
     path('admin_panel/', admin_panel, name='admin_panel'),
     path('courier/', courier_view, name='courier_view'),

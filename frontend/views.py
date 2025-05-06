@@ -8,11 +8,13 @@ from parcels.models import Parcel
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
-from lockers.models import Locker, Lock
+from lockers.models import Lock
 from users.models import CustomUser
 from django.db.models import Q
 from lockers.forms import *
-
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import time
 
 User = settings.AUTH_USER_MODEL
 
@@ -112,7 +114,24 @@ def create_parcel(request):
 
     return render(request, 'create_parcel.html', {'form': form, 'lockers': lockers})
 
+@csrf_exempt  # do usunięcia w przypadku integracji
+def mock_store_parcel(request):
+    if request.method == "POST":
+        parcel_id = request.POST.get('parcel_id')
+        try:
+            parcel = Parcel.objects.get(id=parcel_id)
 
+            time.sleep(5)
+
+            parcel.status = 'stored_in_machine'
+            parcel.save()
+
+            return JsonResponse({'success': True})
+
+        except Parcel.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Paczka nie została znaleziona.'})
+
+    return JsonResponse({'success': False, 'message': 'Nieprawidłowa metoda zapytania.'})
 
 def is_admin(user):
     return user.is_authenticated and user.role == 'admin'

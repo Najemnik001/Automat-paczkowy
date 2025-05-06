@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Strona Główna</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <h1>Witaj, {{ user.username }}!</h1>
@@ -50,6 +51,11 @@
                     {% if parcel.sent_from_machine %}
                         - Paczkomat nadawczy: {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
                     {% endif %}
+                    
+                    {% if parcel.status == 'shipment_ordered' %}
+                        <!-- Przyciski do zmiany statusu na 'stored_in_machine' -->
+                        <button class="store_in_machine" data-parcel-id="{{ parcel.id }}">Przekaż paczkę do paczkomatu</button>
+                    {% endif %}
                 </li>
             {% endfor %}
         </ul>
@@ -61,6 +67,32 @@
     <a href="{% url 'create_parcel' %}">
         <button>Przejdź do nadawania paczki</button>
     </a>
+
+    <script>
+        $(document).ready(function(){
+            $(".store_in_machine").click(function(){
+                var parcelId = $(this).data('parcel-id');
+                alert("Umieść paczkę w automacie");
+                // Wyślij zapytanie AJAX do serwera
+                $.ajax({
+                    
+                    url: "{% url 'mock_store_parcel' %}",
+                    type: "POST",
+                    data: {
+                        'parcel_id': parcelId,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        alert("Paczka została umieszczona w skrytce!");
+                            location.reload();
+                    },
+                    error: function() {
+                        alert("Wystąpił problem podczas procesu.");
+                    }
+                });
+            });
+        });
+    </script>
 
 </body>
 </html>
