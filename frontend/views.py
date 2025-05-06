@@ -47,6 +47,8 @@ def user_login(request):
                 # Sprawdź rolę użytkownika i przekieruj na odpowiednią stronę
                 if user.role == 'admin':
                     return redirect('admin_panel')  # Przekierowanie na panel admina
+                elif user.role == 'courier':
+                    return redirect('courier_view') # Przekierowanie na panel kuriera
                 else:
                     return redirect('main_page')  # Przekierowanie na główną stronę dla zwykłych użytkowników
             else:
@@ -72,42 +74,50 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+from django.contrib.auth import get_user_model
+
 def create_parcel(request):
+    lockers = Locker.objects.all()
+
+    # Obsługa POST – tworzenie paczki
     if request.method == 'POST':
         form = ParcelForm(request.POST)
         if form.is_valid():
+            receiver = form.cleaned_data['receiver_email']
+
+            # Nie pozwalamy wysłać paczki do siebie samego
+            if receiver == request.user:
+                messages.error(request, "Nie możesz wysłać paczki do samego siebie.")
+                return render(request, 'create_parcel.html', {'form': form, 'lockers': lockers})
+
             parcel = form.save(commit=False)
             parcel.sender = request.user
-            parcel.receiver = form.cleaned_data['receiver_email']
+            parcel.receiver = receiver
             parcel.delivery_status = 'Shipment ordered'
-
-            # Przypisanie lockerów do paczki
-            sent_from_locker = form.cleaned_data['sent_from_locker']
-            sent_to_locker = form.cleaned_data['sent_to_locker']
-            parcel.sent_from_locker = sent_from_locker
-            parcel.sent_to_locker = sent_to_locker
-
+            parcel.sent_from_locker = form.cleaned_data['sent_from_locker']
+            parcel.sent_to_locker = form.cleaned_data['sent_to_locker']
             parcel.save()
-            messages.success(request, "Parcel has been created successfully!")
+
+            messages.success(request, "Przesyłka została utworzona pomyślnie.")
             return redirect('main_page')
         else:
-            messages.error(request, "Error while creating parcel. Please check the details.")
-    else:
-        # Pobieranie query search z URL
-        search_query = request.GET.get('search', '')
-        lockers = Locker.objects.all()
+            messages.error(request, "Użytkownik o podanym adresie email nie istnieje")
 
-        # Filtrujemy lockery na podstawie wprowadzonego tekstu
+    # Obsługa GET – wyświetlenie formularza
+    else:
+        search_query = request.GET.get('search', '')
         if search_query:
             lockers = lockers.filter(name__icontains=search_query) | lockers.filter(location__icontains=search_query)
-
         form = ParcelForm()
 
     return render(request, 'create_parcel.html', {'form': form, 'lockers': lockers})
 
 
+
 def is_admin(user):
     return user.is_authenticated and user.role == 'admin'
+
+
 
 # Panel administratora
 @user_passes_test(is_admin)
@@ -238,3 +248,42 @@ def delete_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
     user.delete()
     return redirect('admin_panel')
+
+def is_courier(user):
+    return user.is_authenticated and user.role == 'courier'
+
+@user_passes_test(is_courier)
+def courier_view(request):
+    lockers = Locker.objects.all()
+    context = {}
+
+    if request.method == 'POST':
+        parcel_id = request.POST.get('parcel_id')
+        new_status = request.POST.get('new_status')
+
+        parcel = get_object_or_404(Parcel, id=parcel_id)
+
+        if new_status in ['picked_up_by_courier', 'delivered_to_machine']:
+            parcel.status = new_status
+            parcel.save()
+            messages.success(request, f"Zmieniono status paczki {parcel.name} na {parcel.get_status_display()}.")
+
+        return redirect('courier_view')
+
+    # Przygotowanie listy paczek dla każdego automatu
+    lockers_with_parcels = []
+    for locker in lockers:
+        to_pick_up = locker.sent_parcels.filter(status='stored_in_machine')  # paczki do odbioru z automatu
+        to_deliver = locker.received_parcels.filter(status='picked_up_by_courier')  # paczki do dostarczenia do automatu
+
+        if to_pick_up.exists() or to_deliver.exists():
+            lockers_with_parcels.append({
+                'locker': locker,
+                'to_pick_up': to_pick_up,
+                'to_deliver': to_deliver,
+            })
+
+    context['lockers_with_parcels'] = lockers_with_parcels
+    return render(request, 'courier_view.html', context)
+
+

@@ -4,30 +4,30 @@ from lockers.models import Locker
 from users.models import CustomUser
 
 class ParcelForm(forms.ModelForm):
-    receiver_email = forms.EmailField(label="Receiver Email", required=True)
+    receiver_email = forms.EmailField(label="Email odbiorcy", required=True)
     sent_from_locker = forms.ModelChoiceField(
         queryset=Locker.objects.all(),
-        label="Sent From Locker",
+        label="Wyślij z paczkomatu",
         required=True,
-        empty_label="Choose Locker to Send From",
-        widget=forms.Select(attrs={'placeholder': 'Search by name or location'})
+        empty_label="Wybierz paczkomat nadawczy",
+        widget=forms.Select(attrs={'placeholder': 'Szukaj po nazwie lub lokalizacji'})
     )
     sent_to_locker = forms.ModelChoiceField(
         queryset=Locker.objects.all(),
-        label="Sent To Locker",
+        label="Dostarcz do paczkomatu",
         required=True,
-        empty_label="Choose Locker to Send To",
-        widget=forms.Select(attrs={'placeholder': 'Search by name or location'})
+        empty_label="Wybierz paczkomat docelowy",
+        widget=forms.Select(attrs={'placeholder': 'Szukaj po nazwie lub lokalizacji'})
     )
 
     class Meta:
         model = Parcel
-        fields = ['name', 'package_size', 'receiver_email', 'sent_from_locker', 'sent_to_locker']
+        fields = ['name', 'package_size', 'sent_from_locker', 'sent_to_locker']  # <- receiver_email nie jest polem modelu!
 
     def clean_receiver_email(self):
         email = self.cleaned_data.get('receiver_email')
         try:
             receiver = CustomUser.objects.get(email=email)
         except CustomUser.DoesNotExist:
-            raise forms.ValidationError(f"Nie ma użytkownika z takim emailem: {email}")
+            raise forms.ValidationError(f"Nie znaleziono użytkownika o adresie: {email}")
         return receiver

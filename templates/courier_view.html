@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Kuriera</title>
+</head>
+<body>
+    <h1>Panel Kuriera - {{ user.username }}</h1>
+
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Wyloguj się</button>
+    </form>
+
+    {% for entry in lockers_with_parcels %}
+        <h2>Locker: {{ entry.locker.name }} ({{ entry.locker.location }})</h2>
+
+        <h3>📦 Do odebrania:</h3>
+        <ul>
+        {% for parcel in entry.to_pick_up %}
+            <li>
+                {{ parcel.name }} — od: {{ parcel.sender.username }} 
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="parcel_id" value="{{ parcel.id }}">
+                    <input type="hidden" name="new_status" value="picked_up_by_courier">
+                    <button type="submit">Zabierz paczkę</button>
+                </form>
+            </li>
+        {% empty %}
+            <li>Brak paczek do odebrania.</li>
+        {% endfor %}
+        </ul>
+
+        <h3>📦 Do dostarczenia:</h3>
+        <ul>
+        {% for parcel in entry.to_deliver %}
+            <li>
+                {{ parcel.name }} — do: {{ parcel.receiver.username }}
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="parcel_id" value="{{ parcel.id }}">
+                    <input type="hidden" name="new_status" value="delivered_to_machine">
+                    <button type="submit">Dostarcz paczkę</button>
+                </form>
+            </li>
+        {% empty %}
+            <li>Brak paczek do dostarczenia.</li>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+</body>
+</html>

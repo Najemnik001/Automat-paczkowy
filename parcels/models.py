@@ -1,6 +1,6 @@
 from django.db import models
 from django.conf import settings
-from lockers.models import Locker  # Zaimportuj model Locker
+from lockers.models import Locker
 
 class Parcel(models.Model):
 
@@ -26,7 +26,7 @@ class Parcel(models.Model):
     delivered_at = models.DateTimeField(null=True, blank=True)
     courier_number = models.CharField(max_length=50, blank=True, null=True)
 
-    # Zmieniamy te pola na ForeignKey do modelu Locker
+
     sent_from_machine = models.ForeignKey(Locker, related_name='sent_parcels', on_delete=models.CASCADE, null=True, blank=True)
     sent_to_machine = models.ForeignKey(Locker, related_name='received_parcels', on_delete=models.CASCADE, null=True, blank=True)
 
