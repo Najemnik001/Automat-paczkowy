@@ -96,14 +96,12 @@ def create_parcel(request):
             parcel.sender = request.user
             parcel.receiver = receiver
             parcel.delivery_status = 'Shipment ordered'
-            parcel.sent_from_locker = form.cleaned_data['sent_from_locker']
-            parcel.sent_to_locker = form.cleaned_data['sent_to_locker']
+            parcel.sent_from_machine = form.cleaned_data['sent_from_machine']
+            parcel.sent_to_machine = form.cleaned_data['sent_to_machine']
             parcel.save()
-
-            messages.success(request, "Przesyłka została utworzona pomyślnie.")
             return redirect('main_page')
         else:
-            messages.error(request, "Użytkownik o podanym adresie email nie istnieje")
+            messages.error(request, "Nie udało się utworzyć paczki. Sprawdź poprawność danych.")
 
     # Obsługa GET – wyświetlenie formularza
     else:

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <title>Create Parcel</title>
@@ -7,66 +7,88 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
     <script>
-        $(document).ready(function() 
-            $('#sent_from_locker').select2({
-                placeholder: 'Select Locker to Send From',
+        $(document).ready(function() {
+            $('#id_sent_from_machine').select2({
+                placeholder: 'Wybierz automat nadawczy',
                 allowClear: true
             });
 
-            $('#sent_to_locker').select2({
-                placeholder: 'Select Locker to Send To',
+            $('#id_sent_to_machine').select2({
+                placeholder: 'Wybierz automat odbiorczy',
                 allowClear: true
             });
         });
     </script>
 </head>
 <body>
-    <h1>Create a Parcel</h1>
+    <h1>Utwórz paczkę</h1>
 
-    <!-- Formularz tworzenia paczki -->
     <form method="POST">
         {% csrf_token %}
 
-        <!-- Wybór lockerów za pomocą Select2 -->
         <div>
-            <label for="sent_from_locker">Sent From Locker:</label>
-            <select name="sent_from_locker" id="sent_from_locker">
-                {% for locker in lockers %}
-                    <option value="{{ locker.id }}">{{ locker.name }} ({{ locker.location }})</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div>
-            <label for="sent_to_locker">Sent To Locker:</label>
-            <select name="sent_to_locker" id="sent_to_locker">
-                {% for locker in lockers %}
-                    <option value="{{ locker.id }}">{{ locker.name }} ({{ locker.location }})</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <br>
-
-        <!-- Pozostałe pola formularza -->
-        <div>
-            <label for="{{ form.name.id_for_label }}">Package Name:</label>
+            <label for="{{ form.name.id_for_label }}">Nazwa paczki:</label>
             {{ form.name }}
+            {% if form.name.errors %}
+                <ul>
+                    {% for error in form.name.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
 
         <div>
-            <label for="{{ form.package_size.id_for_label }}">Package Size:</label>
+            <label for="{{ form.package_size.id_for_label }}">Rozmiar paczki:</label>
             {{ form.package_size }}
+            {% if form.package_size.errors %}
+                <ul>
+                    {% for error in form.package_size.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
 
         <div>
-            <label for="{{ form.receiver_email.id_for_label }}">Receiver Email:</label>
+            <label for="{{ form.receiver_email.id_for_label }}">Email odbiorcy:</label>
             {{ form.receiver_email }}
+            {% if form.receiver_email.errors %}
+                <ul>
+                    {% for error in form.receiver_email.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="{{ form.sent_from_machine.id_for_label }}">Paczkomat nadawczy:</label>
+            {{ form.sent_from_machine }}
+            {% if form.sent_from_machine.errors %}
+                <ul>
+                    {% for error in form.sent_from_machine.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div>
+            <label for="{{ form.sent_to_machine.id_for_label }}">Paczkomat odbiorczy:</label>
+            {{ form.sent_to_machine }}
+            {% if form.sent_to_machine.errors %}
+                <ul>
+                    {% for error in form.sent_to_machine.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </div>
 
         <br>
 
-        <button type="submit">Create Parcel</button>
+        <button type="submit">Utwórz paczkę</button>
     </form>
 
     {% if messages %}
@@ -77,6 +99,6 @@
         </ul>
     {% endif %}
 
-    <a href="{% url 'main_page' %}">Back to Main Page</a>
+    <a href="{% url 'main_page' %}">Wróć do strony głównej</a>
 </body>
 </html>

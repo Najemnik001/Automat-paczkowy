@@ -25,8 +25,6 @@ class Parcel(models.Model):
     package_size = models.CharField(max_length=6, choices=size_choices, default='small')
     delivered_at = models.DateTimeField(null=True, blank=True)
     courier_number = models.CharField(max_length=50, blank=True, null=True)
-
-
     sent_from_machine = models.ForeignKey(Locker, related_name='sent_parcels', on_delete=models.CASCADE, null=True, blank=True)
     sent_to_machine = models.ForeignKey(Locker, related_name='received_parcels', on_delete=models.CASCADE, null=True, blank=True)
 

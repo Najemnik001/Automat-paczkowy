@@ -5,14 +5,14 @@ from users.models import CustomUser
 
 class ParcelForm(forms.ModelForm):
     receiver_email = forms.EmailField(label="Email odbiorcy", required=True)
-    sent_from_locker = forms.ModelChoiceField(
+    sent_from_machine = forms.ModelChoiceField(
         queryset=Locker.objects.all(),
         label="Wyślij z paczkomatu",
         required=True,
         empty_label="Wybierz paczkomat nadawczy",
         widget=forms.Select(attrs={'placeholder': 'Szukaj po nazwie lub lokalizacji'})
     )
-    sent_to_locker = forms.ModelChoiceField(
+    sent_to_machine = forms.ModelChoiceField(
         queryset=Locker.objects.all(),
         label="Dostarcz do paczkomatu",
         required=True,
@@ -22,7 +22,7 @@ class ParcelForm(forms.ModelForm):
 
     class Meta:
         model = Parcel
-        fields = ['name', 'package_size', 'sent_from_locker', 'sent_to_locker']  # <- receiver_email nie jest polem modelu!
+        fields = ['name', 'package_size', 'sent_from_machine', 'sent_to_machine', 'receiver_email']  # <- receiver_email nie jest polem modelu!
 
     def clean_receiver_email(self):
         email = self.cleaned_data.get('receiver_email')
