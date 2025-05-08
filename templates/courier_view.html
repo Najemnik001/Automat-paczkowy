@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Panel Kuriera</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
     <h1>Panel Kuriera - {{ user.username }}</h1>
@@ -19,13 +20,8 @@
         <ul>
         {% for parcel in entry.to_pick_up %}
             <li>
-                {{ parcel.name }} — od: {{ parcel.sender.username }} 
-                <form method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="parcel_id" value="{{ parcel.id }}">
-                    <input type="hidden" name="new_status" value="picked_up_by_courier">
-                    <button type="submit">Zabierz paczkę</button>
-                </form>
+                {{ parcel.name }} — od: {{ parcel.sender.username }}
+                <button class="pickup-btn" data-parcel-id="{{ parcel.id }}">Zabierz paczkę</button>
             </li>
         {% empty %}
             <li>Brak paczek do odebrania.</li>
@@ -37,17 +33,51 @@
         {% for parcel in entry.to_deliver %}
             <li>
                 {{ parcel.name }} — do: {{ parcel.receiver.username }}
-                <form method="post" style="display:inline;">
-                    {% csrf_token %}
-                    <input type="hidden" name="parcel_id" value="{{ parcel.id }}">
-                    <input type="hidden" name="new_status" value="delivered_to_machine">
-                    <button type="submit">Dostarcz paczkę</button>
-                </form>
+                <button class="deliver-btn" data-parcel-id="{{ parcel.id }}">Dostarcz paczkę</button>
             </li>
         {% empty %}
             <li>Brak paczek do dostarczenia.</li>
         {% endfor %}
         </ul>
     {% endfor %}
+
+    <script>
+        $(document).ready(function () {
+            function handleMockAction(url, parcelId, preMsg, postMsg) {
+                alert(preMsg);
+                setTimeout(function () {
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            parcel_id: parcelId,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                alert(postMsg);
+                                location.reload();
+                            } else {
+                                alert("Błąd: " + response.message);
+                            }
+                        },
+                        error: function () {
+                            alert("Wystąpił błąd po stronie serwera.");
+                        }
+                    });
+                }, 5000);
+            }
+
+            $(".pickup-btn").click(function () {
+                const parcelId = $(this).data('parcel-id');
+                handleMockAction("{% url 'mock_pickup_by_courier' %}", parcelId, "Wyjmij paczkę ze skrytki", "Przesyłka wyjęta");
+            });
+
+            $(".deliver-btn").click(function () {
+                const parcelId = $(this).data('parcel-id');
+                handleMockAction("{% url 'mock_deliver_to_machine' %}", parcelId, "Umieść paczkę w automacie", "Przesyłka została dostarczona do skrytki");
+            });
+        });
+    </script>
 </body>
 </html>

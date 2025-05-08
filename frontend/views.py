@@ -316,4 +316,34 @@ def courier_view(request):
     context['lockers_with_parcels'] = lockers_with_parcels
     return render(request, 'courier_view.html', context)
 
+@csrf_exempt
+def mock_pickup_by_courier(request):
+    if request.method == "POST":
+        parcel_id = request.POST.get("parcel_id")
+        try:
+            parcel = Parcel.objects.get(id=parcel_id)
+            time.sleep(5)
+            parcel.status = "picked_up_by_courier"
+            parcel.courier_number = request.user
+            parcel.save()
+            return JsonResponse({'success': True})
+        except Parcel.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Paczka nie istnieje'})
+    return JsonResponse({'success': False, 'message': 'Błędna metoda HTTP'})
+
+@csrf_exempt
+def mock_deliver_to_machine(request):
+    if request.method == "POST":
+        parcel_id = request.POST.get("parcel_id")
+        try:
+            parcel = Parcel.objects.get(id=parcel_id)
+            time.sleep(5)
+            parcel.status = "delivered_to_machine"
+            parcel.save()
+            return JsonResponse({'success': True})
+        except Parcel.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Paczka nie istnieje'})
+    return JsonResponse({'success': False, 'message': 'Błędna metoda HTTP'})
+
+
 
