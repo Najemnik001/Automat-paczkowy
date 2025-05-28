@@ -256,6 +256,16 @@ def delete_user(request, user_id):
 def is_courier(user):
     return user.is_authenticated and user.role == 'courier'
 
+@user_passes_test(is_admin)
+def user_report(request):
+    users = User.objects.all()
+    return render(request, 'raport_users.html', {'users': users})
+
+@user_passes_test(is_admin)
+def parcel_report(request):
+    parcels = Parcel.objects.all()
+    return render(request, 'raport_parcels.html', {'parcels': parcels})
+
 @user_passes_test(is_courier)
 def courier_view(request):
     lockers = Locker.objects.all()

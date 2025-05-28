@@ -12,7 +12,15 @@
         {% csrf_token %}
         <button type="submit">Wyloguj</button>
     </form>
-
+    
+    <a href="{% url 'parcel_report' %}">
+    <button>Raport przesyłek</button>
+    </a>
+    
+    <a href="{% url 'user_report' %}">
+        <button>Raport użytkowników</button>
+    </a>
+    
     <!-- Przycisk dodania skrytki -->
     <a href="{% url 'add_locker' %}"><button>Dodaj skrytkę</button></a>
 

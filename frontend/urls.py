@@ -1,6 +1,6 @@
 from django.urls import path, include
 from . import views
-from .views import admin_panel, add_locker, edit_locker, delete_locker, delete_user, logout_view, admin_panel, courier_view
+from .views import admin_panel, add_locker, edit_locker, delete_locker, delete_user, logout_view, admin_panel, courier_view, user_report, parcel_report
 
 urlpatterns = [
     path('register/', views.register, name='register'),
@@ -19,5 +19,7 @@ urlpatterns = [
     path('edit_locker/<int:locker_id>/', edit_locker, name='edit_locker'),
     path('delete_locker/<int:locker_id>/', delete_locker, name='delete_locker'),
     path('delete_user/<int:user_id>/', delete_user, name='delete_user'),
+    path('raport-uzytkownicy/', user_report, name='user_report'),
+    path('raport-przesylki/', parcel_report, name='parcel_report'),
 
 ]
