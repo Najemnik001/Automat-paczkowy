@@ -1,7 +1,7 @@
 from django.conf import settings
 from users.forms import RegisterForm
 from django.contrib.auth.forms import AuthenticationForm
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from parcels.forms import ParcelForm
 from parcels.models import Parcel
@@ -15,7 +15,8 @@ from lockers.forms import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-import time
+import time, json
+from webpush import send_user_notification
 
 User = settings.AUTH_USER_MODEL
 
@@ -69,6 +70,7 @@ def main_page(request):
     context = {
         'received_parcels': received_parcels,
         'sent_parcels': sent_parcels,
+        'vapid_key': settings.WEBPUSH_SETTINGS["VAPID_PUBLIC_KEY"]
     }
 
     return render(request, 'mainPage.html', context)
@@ -113,34 +115,7 @@ def create_parcel(request):
 
     return render(request, 'create_parcel.html', {'form': form, 'lockers': lockers})
 
-@csrf_exempt  # do usunięcia w przypadku integracji
-def mock_store_parcel(request):
-    if request.method == "POST":
-        parcel_id = request.POST.get('parcel_id')
-        try:
-            parcel = Parcel.objects.get(id=parcel_id)
-            time.sleep(5)
-            parcel.status = 'stored_in_machine'
-            parcel.save()
-            return JsonResponse({'success': True})
-        except Parcel.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Paczka nie została znaleziona.'})
-    return JsonResponse({'success': False, 'message': 'Nieprawidłowa metoda zapytania.'})
 
-@csrf_exempt
-def mock_receive_parcel(request):
-    if request.method == 'POST':
-        parcel_id = request.POST.get('parcel_id')
-        try:
-            parcel = Parcel.objects.get(id=parcel_id)
-            time.sleep(5)
-            parcel.status = 'received_by_recipient'
-            parcel.delivered_at = timezone.now()
-            parcel.save()
-            return JsonResponse({'success': True})
-        except Parcel.DoesNotExist:
-            return JsonResponse({'success': False, 'message': 'Paczka nie istnieje'})
-    return JsonResponse({'success': False, 'message': 'Błędna metoda HTTP'})
 
 
 def is_admin(user):
@@ -316,20 +291,38 @@ def courier_view(request):
     context['lockers_with_parcels'] = lockers_with_parcels
     return render(request, 'courier_view.html', context)
 
+
 @csrf_exempt
 def mock_pickup_by_courier(request):
     if request.method == "POST":
         parcel_id = request.POST.get("parcel_id")
         try:
             parcel = Parcel.objects.get(id=parcel_id)
+
             time.sleep(5)
+
             parcel.status = "picked_up_by_courier"
-            parcel.courier_number = request.user
             parcel.save()
+
+            # 🔔 Powiadomienie push do nadawcy
+            payload = {
+                "head": "Paczka w drodze!",
+                "body": f"Kurier odebrał twoją paczkę: '{parcel.name}'.",
+                "icon": "https://i.imgur.com/dRDxiCQ.png"
+            }
+
+            try:
+                send_user_notification(user=parcel.sender, payload=payload, ttl=1000)
+            except Exception as e:
+                print(f"Błąd przy wysyłaniu powiadomienia: {e}")
+
             return JsonResponse({'success': True})
+
         except Parcel.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Paczka nie istnieje'})
+
     return JsonResponse({'success': False, 'message': 'Błędna metoda HTTP'})
+
 
 @csrf_exempt
 def mock_deliver_to_machine(request):
@@ -337,13 +330,68 @@ def mock_deliver_to_machine(request):
         parcel_id = request.POST.get("parcel_id")
         try:
             parcel = Parcel.objects.get(id=parcel_id)
+
             time.sleep(5)
+
             parcel.status = "delivered_to_machine"
+            parcel.save()
+
+            payload = {
+                "head": "Twoja paczka dotarła!",
+                "body": f"Paczka '{parcel.name}' czeka na odbiór w automacie: {parcel.sent_to_machine.name}",
+                "icon": "https://i.imgur.com/dRDxiCQ.png",
+                "url": "http://localhost:8000/main_page/"
+            }
+
+            try:
+                send_user_notification(user=parcel.receiver, payload=payload, ttl=1000)
+            except Exception as e:
+                print(f"Błąd przy wysyłaniu powiadomienia: {e}")
+
+            return JsonResponse({'success': True})
+
+        except Parcel.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Paczka nie istnieje'})
+
+    return JsonResponse({'success': False, 'message': 'Błędna metoda HTTP'})
+
+@csrf_exempt  # do usunięcia w przypadku integracji
+def mock_store_parcel(request):
+    if request.method == "POST":
+        parcel_id = request.POST.get('parcel_id')
+        try:
+            parcel = Parcel.objects.get(id=parcel_id)
+            time.sleep(5)
+            parcel.status = 'stored_in_machine'
+            parcel.save()
+
+            # Wysyłanie powiadomienia do odbiorcy paczki
+            if parcel.receiver:
+                payload = {
+                    "head": "Twoja paczka jest już w automacie!",
+                    "body": f"Paczka '{parcel.name}' od {parcel.sender.username} została umieszczona w automacie.",
+                    "icon": "https://i.imgur.com/dRDxiCQ.png"  # opcjonalna ikonka
+                }
+                send_user_notification(user=parcel.receiver, payload=payload, ttl=1000)
+
+            return JsonResponse({'success': True})
+        except Parcel.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Paczka nie została znaleziona.'})
+    return JsonResponse({'success': False, 'message': 'Nieprawidłowa metoda zapytania.'})
+
+@csrf_exempt
+def mock_receive_parcel(request):
+    if request.method == 'POST':
+        parcel_id = request.POST.get('parcel_id')
+        try:
+            parcel = Parcel.objects.get(id=parcel_id)
+            time.sleep(5)
+            parcel.status = 'received_by_recipient'
+            parcel.delivered_at = timezone.now()
             parcel.save()
             return JsonResponse({'success': True})
         except Parcel.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Paczka nie istnieje'})
     return JsonResponse({'success': False, 'message': 'Błędna metoda HTTP'})
-
 
 

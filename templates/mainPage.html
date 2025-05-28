@@ -1,9 +1,11 @@
 <!DOCTYPE html>
+{% load webpush_notifications %}
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Strona Główna</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {% webpush_header %}
 </head>
 <body>
     <h1>Witaj, {{ user.username }}!</h1>
@@ -12,6 +14,7 @@
     <form action="{% url 'logout' %}" method="post">
         {% csrf_token %}
         <button type="submit">Wyloguj się</button>
+        {% webpush_button %}
     </form>
 
     <h2>Paczki, które są nadane do Ciebie:</h2>
@@ -33,6 +36,7 @@
                     {% if parcel.status == 'delivered_to_machine' %}
                         <!-- Przycisk do odbioru paczki -->
                         <button class="receive_parcel" data-parcel-id="{{ parcel.id }}">Odbierz paczkę</button>
+                        
                     {% endif %}
                 </li>
             {% endfor %}
@@ -116,5 +120,7 @@
             });
         });
     </script>
+
+
 </body>
 </html>

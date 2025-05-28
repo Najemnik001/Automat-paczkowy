@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'users',
     'lockers',
-    'parcels'
+    'parcels',
+    'webpush'
 ]
 
 MIDDLEWARE = [
@@ -126,6 +127,12 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+}
+
+WEBPUSH_SETTINGS = {
+    "VAPID_PUBLIC_KEY": 'BOGll6XO21C7GqXNJTIazL0ksmY9mNPYW-1StB3XFuQcXuYbMQDjBLoM7a3hUyWoOOK7akdWWsyccedAg942peo',
+    "VAPID_PRIVATE_KEY": '3WLHC_B2pFc5qe6MwNNYRHnSSeDJwGwW3SNXEhOnwJ4',
+    "VAPID_ADMIN_EMAIL": "Jan@test.com"
 }
 
 # Internationalization
