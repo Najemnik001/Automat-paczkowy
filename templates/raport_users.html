@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Raport użytkowników</title>
+</head>
+<body>
+    <h1>Raport użytkowników</h1>
+    <a href="{% url 'admin_panel' %}"><button>Wróć</button></a>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Nazwa użytkownika</th>
+            <th>Email</th>
+            <th>Rola</th>
+            <th>Data dołączenia</th>
+        </tr>
+        {% for user in users %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{{ user.email }}</td>
+            <td>{{ user.role }}</td>
+            <td>{{ user.date_joined }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>

@@ -151,18 +151,16 @@ def add_locker(request):
     if request.method == 'POST':
         form = LockerForm(request.POST)
         if form.is_valid():
-            # Zapisujemy obiekt Locker
+
             locker = form.save()
 
             # Pobieramy liczby skrytek z formularza
             small_boxes = form.cleaned_data['small_boxes']
             large_boxes = form.cleaned_data['large_boxes']
 
-            # Tworzymy skrytki o rozmiarze small
             for _ in range(small_boxes):
                 Lock.objects.create(locker=locker, size='small', is_free=True)
 
-            # Tworzymy skrytki o rozmiarze large
             for _ in range(large_boxes):
                 Lock.objects.create(locker=locker, size='large', is_free=True)
 
@@ -258,7 +256,7 @@ def is_courier(user):
 
 @user_passes_test(is_admin)
 def user_report(request):
-    users = User.objects.all()
+    users = CustomUser.objects.all()
     return render(request, 'raport_users.html', {'users': users})
 
 @user_passes_test(is_admin)

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Raport przesyłek</title>
+</head>
+<body>
+    <h1>Raport przesyłek</h1>
+    <a href="{% url 'admin_panel' %}"><button>Wróć</button></a>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Nadawca</th>
+            <th>Odbiorca</th>
+            <th>Status</th>
+            <th>Data dostarczenia</th>
+            <th>Kurier</th>
+        </tr>
+        {% for parcel in parcels %}
+        <tr>
+            <td>{{ parcel.id }}</td>
+            <td>{{ parcel.sender.username }}</td>
+            <td>{{ parcel.receiver.username }}</td>
+            <td>{{ parcel.status }}</td>
+            <td>{{ parcel.delivered_at|default:"Brak" }}</td>
+            <td>{{ parcel.courier_number_id.username|default:"Brak" }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
