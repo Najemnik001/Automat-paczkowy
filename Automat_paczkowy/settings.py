@@ -90,7 +90,7 @@ DATABASES = {
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',  # lub inny silnik
+#         'ENGINE': 'django.db.backends.postgresql',
 #         'NAME': config('DATABASE_NAME'),
 #         'USER': config('DATABASE_USER'),
 #         'PASSWORD': config('DATABASE_PASSWORD'),

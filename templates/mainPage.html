@@ -9,8 +9,7 @@
 </head>
 <body>
     <h1>Witaj, {{ user.username }}!</h1>
-
-    <!-- Przycisk do wylogowania -->
+    
     <form action="{% url 'logout' %}" method="post">
         {% csrf_token %}
         <button type="submit">Wyloguj się</button>
@@ -34,7 +33,6 @@
                     {% endif %}
 
                     {% if parcel.status == 'delivered_to_machine' %}
-                        <!-- Przycisk do odbioru paczki -->
                         <button class="receive_parcel" data-parcel-id="{{ parcel.id }}">Odbierz paczkę</button>
                         
                     {% endif %}
@@ -62,7 +60,6 @@
                     {% endif %}
 
                     {% if parcel.status == 'shipment_ordered' %}
-                        <!-- Przycisk do nadania paczki -->
                         <button class="store_in_machine" data-parcel-id="{{ parcel.id }}">Przekaż paczkę do paczkomatu</button>
                     {% endif %}
                 </li>
@@ -71,8 +68,7 @@
     {% else %}
         <p>Nie masz wysłanych paczek.</p>
     {% endif %}
-
-    <!-- Przycisk do nadania paczki -->
+    
     <a href="{% url 'create_parcel' %}">
         <button>Przejdź do nadawania paczki</button>
     </a>
@@ -103,7 +99,7 @@
                 var parcelId = $(this).data('parcel-id');
                 alert("Otwórz skrytkę i odbierz paczkę");
                 $.ajax({
-                    url: "{% url 'mock_receive_parcel' %}",  // <-- Dodaj ten widok w urls.py
+                    url: "{% url 'mock_receive_parcel' %}",
                     type: "POST",
                     data: {
                         'parcel_id': parcelId,

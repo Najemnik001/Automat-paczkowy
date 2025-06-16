@@ -31,9 +31,7 @@ class LockerEditForm(forms.ModelForm):
         locker = kwargs.pop('locker', None)
         super().__init__(*args, **kwargs)
         if locker:
-            # Ustawienie wartości dla name i location
             self.fields['name'].initial = locker.name
             self.fields['location'].initial = locker.location
-            # Ustawienie wartości dla small_boxes i large_boxes
             self.fields['small_boxes'].initial = locker.locks.filter(size='small').count()
             self.fields['large_boxes'].initial = locker.locks.filter(size='large').count()

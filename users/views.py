@@ -19,7 +19,6 @@ class RegisterView(APIView):
 
             return Response({"message": "User created successfully"}, status=status.HTTP_201_CREATED)
 
-        # Jeśli dane są błędne
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -29,9 +28,9 @@ def register(request):
         if form.is_valid():
             user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
-            user.save()  # Zapisz użytkownika
+            user.save()
             messages.success(request, "User created successfully!")
-            return redirect('login')  # Przekierowanie na stronę logowania
+            return redirect('login')
     else:
         form = RegisterForm()
 

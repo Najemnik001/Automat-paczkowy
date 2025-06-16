@@ -7,7 +7,6 @@
 <body>
     <h1>Panel administratora</h1>
     
-    <!-- Przycisk wylogowania -->
     <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit">Wyloguj</button>
@@ -21,10 +20,8 @@
         <button>Raport użytkowników</button>
     </a>
     
-    <!-- Przycisk dodania skrytki -->
     <a href="{% url 'add_locker' %}"><button>Dodaj skrytkę</button></a>
-
-    <!-- Wyszukiwanie skrytek -->
+    
     <h2>Szukaj skrytki</h2>
     <form method="post">
         {% csrf_token %}
@@ -40,8 +37,7 @@
         </li>
         {% endfor %}
     </ul>
-
-    <!-- Wyszukiwanie użytkowników -->
+    
     <h2>Szukaj użytkownika</h2>
     <form method="post">
         {% csrf_token %}

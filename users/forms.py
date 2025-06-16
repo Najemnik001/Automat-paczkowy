@@ -3,7 +3,7 @@ from .models import CustomUser
 
 class RegisterForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
-    role = forms.CharField()  # Dodaj inne pola w razie potrzeby
+    role = forms.CharField()
 
     class Meta:
         model = CustomUser

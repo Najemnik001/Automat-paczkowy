@@ -15,7 +15,7 @@ from lockers.forms import *
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
-import time, json
+import time
 from webpush import send_user_notification
 
 User = settings.AUTH_USER_MODEL
@@ -48,13 +48,13 @@ def user_login(request):
             user = authenticate(username=username, password=password)
             if user is not None:
                 login(request, user)
-                # Sprawdź rolę użytkownika i przekieruj na odpowiednią stronę
+
                 if user.role == 'admin':
-                    return redirect('admin_panel')  # Przekierowanie na panel admina
+                    return redirect('admin_panel')
                 elif user.role == 'courier':
-                    return redirect('courier_view') # Przekierowanie na panel kuriera
+                    return redirect('courier_view')
                 else:
-                    return redirect('main_page')  # Przekierowanie na główną stronę dla zwykłych użytkowników
+                    return redirect('main_page')
             else:
                 messages.error(request, "Nieprawidłowe dane logowania.")
     else:
@@ -63,7 +63,6 @@ def user_login(request):
     return render(request, 'login.html', {'form': form})
 @login_required
 def main_page(request):
-    # Pobranie paczek nadanych do użytkownika i wysłanych przez użytkownika
     received_parcels = Parcel.objects.filter(receiver=request.user)
     sent_parcels = Parcel.objects.filter(sender=request.user)
 
@@ -79,18 +78,14 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-from django.contrib.auth import get_user_model
-
 def create_parcel(request):
     lockers = Locker.objects.all()
 
-    # Obsługa POST – tworzenie paczki
     if request.method == 'POST':
         form = ParcelForm(request.POST)
         if form.is_valid():
             receiver = form.cleaned_data['receiver_email']
 
-            # Nie pozwalamy wysłać paczki do siebie samego
             if receiver == request.user:
                 messages.error(request, "Nie możesz wysłać paczki do samego siebie.")
                 return render(request, 'create_parcel.html', {'form': form, 'lockers': lockers})
@@ -106,7 +101,6 @@ def create_parcel(request):
         else:
             messages.error(request, "Nie udało się utworzyć paczki. Sprawdź poprawność danych.")
 
-    # Obsługa GET – wyświetlenie formularza
     else:
         search_query = request.GET.get('search', '')
         if search_query:
@@ -127,7 +121,6 @@ def is_admin(user):
 @user_passes_test(is_admin)
 def admin_panel(request):
     if request.method == 'POST':
-        # Jeśli użytkownik wprowadził zapytanie do wyszukiwania
         search_lockers = request.POST.get('search_lockers')
         search_users = request.POST.get('search_users')
 
@@ -153,8 +146,6 @@ def add_locker(request):
         if form.is_valid():
 
             locker = form.save()
-
-            # Pobieramy liczby skrytek z formularza
             small_boxes = form.cleaned_data['small_boxes']
             large_boxes = form.cleaned_data['large_boxes']
 
@@ -178,17 +169,15 @@ def edit_locker(request, locker_id):
     if request.method == 'POST':
         form = LockerEditForm(request.POST, locker=locker)
         if form.is_valid():
-            # Pobieramy nową liczbę skrytek
+
             new_small_boxes = form.cleaned_data['small_boxes']
             new_large_boxes = form.cleaned_data['large_boxes']
 
-            # Pobieramy aktualną liczbę skrytek
             current_small_boxes = locker.locks.filter(size='small').count()
             current_large_boxes = locker.locks.filter(size='large').count()
 
-            # Obsługa zmian dla small boxes
             if new_small_boxes < current_small_boxes:
-                # Znajdujemy wolne skrytki do usunięcia
+
                 free_locks = locker.locks.filter(size='small', is_free=True)
                 locks_to_delete_count = current_small_boxes - new_small_boxes
 
@@ -196,18 +185,17 @@ def edit_locker(request, locker_id):
                     messages.error(request, "Nie można zmniejszyć liczby skrytek: niektóre są zajęte.")
                     return render(request, 'edit_locker.html', {'form': form, 'locker': locker})
 
-                # Usuwamy wolne skrytki
+
                 for lock in free_locks[:locks_to_delete_count]:
-                    lock.delete()  # Prawidłowe usuwanie
+                    lock.delete()
 
             elif new_small_boxes > current_small_boxes:
-                # Dodajemy brakujące skrytki
+
                 for _ in range(new_small_boxes - current_small_boxes):
                     Lock.objects.create(locker=locker, size='small', is_free=True)
 
-            # Obsługa zmian dla large boxes
             if new_large_boxes < current_large_boxes:
-                # Znajdujemy wolne skrytki do usunięcia
+
                 free_locks = locker.locks.filter(size='large', is_free=True)
                 locks_to_delete_count = current_large_boxes - new_large_boxes
 
@@ -215,16 +203,13 @@ def edit_locker(request, locker_id):
                     messages.error(request, "Nie można zmniejszyć liczby skrytek: niektóre są zajęte.")
                     return render(request, 'edit_locker.html', {'form': form, 'locker': locker})
 
-                # Usuwamy wolne skrytki
                 for lock in free_locks[:locks_to_delete_count]:
-                    lock.delete()  # Prawidłowe usuwanie
+                    lock.delete()
 
             elif new_large_boxes > current_large_boxes:
-                # Dodajemy brakujące skrytki
                 for _ in range(new_large_boxes - current_large_boxes):
                     Lock.objects.create(locker=locker, size='large', is_free=True)
 
-            # Aktualizujemy dane Locker (np. nazwę i lokalizację)
             locker.name = form.cleaned_data['name']
             locker.location = form.cleaned_data['location']
             locker.save()
@@ -283,7 +268,6 @@ def courier_view(request):
 
         return redirect('courier_view')
 
-    # Przygotowanie listy paczek dla każdego automatu
     lockers_with_parcels = []
     for locker in lockers:
         to_pick_up = locker.sent_parcels.filter(status='stored_in_machine')  # paczki do odbioru z automatu
@@ -312,7 +296,6 @@ def mock_pickup_by_courier(request):
             parcel.status = "picked_up_by_courier"
             parcel.save()
 
-            # 🔔 Powiadomienie push do nadawcy
             payload = {
                 "head": "Paczka w drodze!",
                 "body": f"Kurier odebrał twoją paczkę: '{parcel.name}'.",
@@ -363,7 +346,7 @@ def mock_deliver_to_machine(request):
 
     return JsonResponse({'success': False, 'message': 'Błędna metoda HTTP'})
 
-@csrf_exempt  # do usunięcia w przypadku integracji
+@csrf_exempt
 def mock_store_parcel(request):
     if request.method == "POST":
         parcel_id = request.POST.get('parcel_id')
@@ -373,7 +356,6 @@ def mock_store_parcel(request):
             parcel.status = 'stored_in_machine'
             parcel.save()
 
-            # Wysyłanie powiadomienia do odbiorcy paczki
             if parcel.receiver:
                 payload = {
                     "head": "Twoja paczka jest już w automacie!",
