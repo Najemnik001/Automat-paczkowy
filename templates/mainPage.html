@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+{% load webpush_notifications %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Strona Główna</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {% webpush_header %}
+</head>
+<body>
+    <h1>Witaj, {{ user.username }}!</h1>
+    
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Wyloguj się</button>
+        {% webpush_button %}
+    </form>
+
+    <h2>Paczki, które są nadane do Ciebie:</h2>
+    {% if received_parcels %}
+        <ul>
+            {% for parcel in received_parcels %}
+                <li>
+                    {{ parcel.name }} - {{ parcel.status }}
+                    {% if parcel.delivered_at %}
+                        - Dostarczona dnia {{ parcel.delivered_at }}
+                    {% endif %}
+                    {% if parcel.courier_number %}
+                        - Kurier: {{ parcel.courier_number }}
+                    {% endif %}
+                    {% if parcel.sent_to_machine %}
+                        - Paczkomat odbiorczy: {{ parcel.sent_to_machine.name }} ({{ parcel.sent_to_machine.location }})
+                    {% endif %}
+
+                    {% if parcel.status == 'delivered_to_machine' %}
+                        <button class="receive_parcel" data-parcel-id="{{ parcel.id }}">Odbierz paczkę</button>
+                        
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Nie masz paczek jadących do Ciebie.</p>
+    {% endif %}
+
+    <h2>Twoje wysłane paczki:</h2>
+    {% if sent_parcels %}
+        <ul>
+            {% for parcel in sent_parcels %}
+                <li>
+                    {{ parcel.name }} - {{ parcel.status }}
+                    {% if parcel.delivered_at %}
+                        - Dostarczona dnia {{ parcel.delivered_at }}
+                    {% endif %}
+                    {% if parcel.courier_number %}
+                        - Kurier: {{ parcel.courier_number }}
+                    {% endif %}
+                    {% if parcel.sent_from_machine %}
+                        - Paczkomat nadawczy: {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
+                    {% endif %}
+
+                    {% if parcel.status == 'shipment_ordered' %}
+                        <button class="store_in_machine" data-parcel-id="{{ parcel.id }}">Przekaż paczkę do paczkomatu</button>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Nie masz wysłanych paczek.</p>
+    {% endif %}
+    
+    <a href="{% url 'create_parcel' %}">
+        <button>Przejdź do nadawania paczki</button>
+    </a>
+
+    <script>
+        $(document).ready(function(){
+            $(".store_in_machine").click(function(){
+                var parcelId = $(this).data('parcel-id');
+                alert("Umieść paczkę w automacie");
+                $.ajax({
+                    url: "{% url 'mock_store_parcel' %}",
+                    type: "POST",
+                    data: {
+                        'parcel_id': parcelId,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        alert("Paczka została umieszczona w skrytce!");
+                        location.reload();
+                    },
+                    error: function() {
+                        alert("Wystąpił problem podczas procesu.");
+                    }
+                });
+            });
+
+            $(".receive_parcel").click(function(){
+                var parcelId = $(this).data('parcel-id');
+                alert("Otwórz skrytkę i odbierz paczkę");
+                $.ajax({
+                    url: "{% url 'mock_receive_parcel' %}",
+                    type: "POST",
+                    data: {
+                        'parcel_id': parcelId,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response) {
+                        alert("Przesyłka odebrana. Dziękujemy za skorzystanie z naszych usług!");
+                        location.reload();
+                    },
+                    error: function() {
+                        alert("Wystąpił problem podczas odbioru paczki.");
+                    }
+                });
+            });
+        });
+    </script>
+
+
+</body>
+</html>

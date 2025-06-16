@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel administratora</title>
+</head>
+<body>
+    <h1>Panel administratora</h1>
+    
+    <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Wyloguj</button>
+    </form>
+    
+    <a href="{% url 'parcel_report' %}">
+    <button>Raport przesyłek</button>
+    </a>
+    
+    <a href="{% url 'user_report' %}">
+        <button>Raport użytkowników</button>
+    </a>
+    
+    <a href="{% url 'add_locker' %}"><button>Dodaj skrytkę</button></a>
+    
+    <h2>Szukaj skrytki</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="search_lockers" placeholder="Nazwa lub lokalizacja">
+        <button type="submit">Szukaj</button>
+    </form>
+    <ul>
+        {% for locker in lockers %}
+        <li>
+            {{ locker.name }} - {{ locker.location }}
+            <a href="{% url 'edit_locker' locker.id %}">Edytuj</a>
+            <a href="{% url 'delete_locker' locker.id %}">Usuń</a>
+        </li>
+        {% endfor %}
+    </ul>
+    
+    <h2>Szukaj użytkownika</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="text" name="search_users" placeholder="Email, imię lub nazwisko">
+        <button type="submit">Szukaj</button>
+    </form>
+    <ul>
+        {% for user in users %}
+        <li>
+            {{ user.username }} {{ user.usersurname }} ({{ user.role }})
+            <a href="{% url 'edit_user' user.id %}">Edytuj</a>
+            <a href="{% url 'delete_user' user.id %}">Usuń</a>
+        </li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Kuriera</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Panel Kuriera - {{ user.username }}</h1>
+
+    <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Wyloguj się</button>
+    </form>
+
+    {% for entry in lockers_with_parcels %}
+        <h2>Locker: {{ entry.locker.name }} ({{ entry.locker.location }})</h2>
+
+        <h3>📦 Do odebrania:</h3>
+        <ul>
+        {% for parcel in entry.to_pick_up %}
+            <li>
+                {{ parcel.name }} — od: {{ parcel.sender.username }}
+                <button class="pickup-btn" data-parcel-id="{{ parcel.id }}">Zabierz paczkę</button>
+            </li>
+        {% empty %}
+            <li>Brak paczek do odebrania.</li>
+        {% endfor %}
+        </ul>
+
+        <h3>📦 Do dostarczenia:</h3>
+        <ul>
+        {% for parcel in entry.to_deliver %}
+            <li>
+                {{ parcel.name }} — do: {{ parcel.receiver.username }}
+                <button class="deliver-btn" data-parcel-id="{{ parcel.id }}">Dostarcz paczkę</button>
+            </li>
+        {% empty %}
+            <li>Brak paczek do dostarczenia.</li>
+        {% endfor %}
+        </ul>
+    {% endfor %}
+
+    <script>
+        $(document).ready(function () {
+            function handleMockAction(url, parcelId, preMsg, postMsg) {
+                alert(preMsg);
+                setTimeout(function () {
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        data: {
+                            parcel_id: parcelId,
+                            csrfmiddlewaretoken: '{{ csrf_token }}'
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                alert(postMsg);
+                                location.reload();
+                            } else {
+                                alert("Błąd: " + response.message);
+                            }
+                        },
+                        error: function () {
+                            alert("Wystąpił błąd po stronie serwera.");
+                        }
+                    });
+                }, 5000);
+            }
+
+            $(".pickup-btn").click(function () {
+                const parcelId = $(this).data('parcel-id');
+                handleMockAction("{% url 'mock_pickup_by_courier' %}", parcelId, "Wyjmij paczkę ze skrytki", "Przesyłka wyjęta");
+            });
+
+            $(".deliver-btn").click(function () {
+                const parcelId = $(this).data('parcel-id');
+                handleMockAction("{% url 'mock_deliver_to_machine' %}", parcelId, "Umieść paczkę w automacie", "Przesyłka została dostarczona do skrytki");
+            });
+        });
+    </script>
+</body>
+</html>
