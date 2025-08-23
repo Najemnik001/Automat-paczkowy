@@ -13,6 +13,12 @@
         <button type="submit">Zaloguj się</button>
     </form>
 
+    <p>Nie masz konta? 
+        <a href="{% url 'register' %}">
+            <button type="button">Zarejestruj się!</button>
+        </a>
+    </p>
+
     {% if form.errors %}
         <ul>
             {% for field in form %}

@@ -25,10 +25,7 @@ def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.set_password(form.cleaned_data['password'])
-            user.save()
-
+            user = form.save()
             login(request, user)
 
             messages.success(request, "Rejestracja zakończona sukcesem! Możesz teraz się zalogować.")
@@ -37,7 +34,6 @@ def register(request):
         form = RegisterForm()
 
     return render(request, 'register.html', {'form': form})
-
 
 def user_login(request):
     if request.method == 'POST':
