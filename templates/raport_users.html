@@ -1,29 +1,142 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
+    <meta charset="UTF-8">
     <title>Raport użytkowników</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body{
+            min-height:100vh;
+            background: linear-gradient(135deg,#c62828,#1565c0);
+            display:flex;align-items:flex-start;justify-content:center;
+            padding:40px 16px;
+        }
+        .page-card{
+            background:#fff;color:#000; width:100%; max-width:1200px;
+            border-radius:0; box-shadow:0 6px 14px rgba(0,0,0,.15);
+            padding:28px;
+        }
+        .btn, .table, .form-control, .modal-content { border-radius:0 !important; }
+        .section-title{
+            border-left:6px solid #1565c0;
+            padding-left:12px; margin-bottom:16px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Raport użytkowników</h1>
-    <a href="{% url 'admin_panel' %}"><button>Wróć</button></a>
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Nazwa użytkownika</th>
-            <th>Email</th>
-            <th>Rola</th>
-            <th>Data dołączenia</th>
-        </tr>
-        {% for user in users %}
-        <tr>
-            <td>{{ user.id }}</td>
-            <td>{{ user.username }}</td>
-            <td>{{ user.email }}</td>
-            <td>{{ user.role }}</td>
-            <td>{{ user.date_joined }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+<div class="page-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="section-title m-0">Raport użytkowników</h2>
+        <a href="{% url 'admin_panel' %}" class="btn btn-outline-secondary">Wróć</a>
+    </div>
 
+    {% if messages %}
+        <div class="mb-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }}" style="border-radius:0;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th>ID</th>
+                <th>Imię i nazwisko</th>
+                <th>Email</th>
+                <th>Rola</th>
+                <th>Data dołączenia</th>
+                <th>Akcje</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for user in users %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ user.id }}</td>
+                    <td>{{ user.username }} {{ user.usersurname }}</td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.get_role_display  }}</td>
+                    <td>{{ user.date_joined|date:"Y-m-d H:i" }}</td>
+                    <td class="d-flex gap-2">
+                        <button
+                            type="button"
+                            class="btn btn-primary btn-sm open-role-modal"
+                            data-bs-toggle="modal"
+                            data-bs-target="#roleModal"
+                            data-url="{% url 'change_user_role' user.id %}"
+                            data-username="{{ user.username }} {{ user.usersurname }}"
+                            data-current-role="{{ user.get_role_display  }}">
+                            Edytuj
+                        </button>
+                        <a href="{% url 'delete_user' user.id %}"
+                           class="btn btn-outline-danger btn-sm"
+                           onclick="return confirm('Na pewno usunąć użytkownika?');">
+                            Usuń
+                        </a>
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted">Brak użytkowników do wyświetlenia.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal: zmiana roli -->
+<div class="modal fade" id="roleModal" tabindex="-1" aria-labelledby="roleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" id="roleForm" action="#">
+        {% csrf_token %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="roleModalLabel">Zmień rolę użytkownika</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Zamknij"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Użytkownik</label>
+            <input type="text" class="form-control" id="modalUserName" disabled>
+          </div>
+          <div class="mb-0">
+            <label for="roleSelect" class="form-label">Rola</label>
+            <select name="role" id="roleSelect" class="form-control" required>
+              <option value="admin">Administrator</option>
+              <option value="courier">Kurier</option>
+              <option value="client">Klient</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuluj</button>
+          <button type="submit" class="btn btn-primary">Zapisz</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener('click', function(e){
+        const btn = e.target.closest('.open-role-modal');
+        if(!btn) return;
+
+        const form = document.getElementById('roleForm');
+        form.action = btn.dataset.url;
+
+        document.getElementById('modalUserName').value = btn.dataset.username || '';
+        const currentRole = btn.dataset.currentRole || 'client';
+        const select = document.getElementById('roleSelect');
+        [...select.options].forEach(opt => opt.selected = (opt.value === currentRole));
+    });
+</script>
 </body>
 </html>

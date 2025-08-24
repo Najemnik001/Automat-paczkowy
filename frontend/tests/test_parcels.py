@@ -2,14 +2,34 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from lockers.models import Locker
 from parcels.models import Parcel
+import random
+from users.models import CustomUser
 
 User = get_user_model()
 
 class ParcelModelTest(TestCase):
     def setUp(self):
-        self.sender = User.objects.create_user(username="jan", password="test123", role="client")
-        self.receiver = User.objects.create_user(username="adam", password="test123", role="client")
-        self.courier = User.objects.create_user(username="kurier", password="test123", role="courier")
+        self.sender = CustomUser.objects.create_user(
+            username="Jan",
+            usersurname="Kowalski",
+            email=f"sender{random.randint(1000, 9999)}@example.com",
+            password="Test12345",
+            role="client"
+        )
+        self.receiver = CustomUser.objects.create_user(
+            username="Anna",
+            usersurname="Nowak",
+            email=f"receiver{random.randint(1000, 9999)}@example.com",
+            password="Test12345",
+            role="client"
+        )
+        self.courier = CustomUser.objects.create_user(
+            username="kurier",
+            usersurname="Abacki",
+            email=f"courier{random.randint(1000, 9999)}@example.com",
+            password="Test12345",
+            role="courier"
+        )
 
         self.locker_from = Locker.objects.create(name="LockerA", location="Warszawa")
         self.locker_to = Locker.objects.create(name="LockerB", location="Białystok")

@@ -1,5 +1,7 @@
 from django import forms
 from .models import CustomUser
+from django import forms
+from django.contrib.auth.forms import AuthenticationForm
 
 class RegisterForm(forms.ModelForm):
     password1 = forms.CharField(
@@ -57,3 +59,14 @@ class RegisterForm(forms.ModelForm):
         if commit:
             user.save()
         return user
+
+class CustomAuthenticationForm(AuthenticationForm):
+    username = forms.EmailField(
+        label=("Adres e-mail"),
+        widget=forms.EmailInput(attrs={"autofocus": True})
+    )
+
+    error_messages = {
+        "invalid_login": "Wprowadź poprawny adres e-mail i hasło.",
+        "inactive": "To konto jest nieaktywne.",
+    }

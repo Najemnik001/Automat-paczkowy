@@ -21,5 +21,8 @@ urlpatterns = [
     path('delete_user/<int:user_id>/', delete_user, name='delete_user'),
     path('raport-uzytkownicy/', user_report, name='user_report'),
     path('raport-przesylki/', parcel_report, name='parcel_report'),
+    path('uzytkownik/<int:user_id>/zmien-role/', views.change_user_role, name='change_user_role'),
+    path('users/<int:user_id>/role/', views.update_user_role, name='update_user_role')
+
 
 ]

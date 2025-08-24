@@ -4,14 +4,27 @@ from django.contrib.auth import get_user_model
 from parcels.models import Parcel
 from lockers.models import Locker
 from unittest.mock import patch
+import random
 
 User = get_user_model()
 
 class ParcelAPITestCase(TestCase):
     def setUp(self):
         self.client = Client()
-        self.sender = User.objects.create_user(username='sender', email='sender@test.pl', password='pass')
-        self.receiver = User.objects.create_user(username='receiver', email='receiver@test.pl', password='pass')
+        r = random.randint(1000, 9999)
+
+        self.sender = User.objects.create_user(
+            email=f'sender{r}@test.pl',
+            username='Sender',
+            usersurname='Kowalski',
+            password='pass'
+        )
+        self.receiver = User.objects.create_user(
+            email=f'receiver{r}@test.pl',
+            username='Receiver',
+            usersurname='Nowak',
+            password='pass'
+        )
 
         self.locker_from = Locker.objects.create(name='LockerA', location='Warszawa')
         self.locker_to = Locker.objects.create(name='LockerB', location='Białystok')
@@ -25,9 +38,10 @@ class ParcelAPITestCase(TestCase):
             status='shipment_ordered'
         )
 
+    # UWAGA: kolejność argumentów odpowiada kolejności patchy (najnowszy patch jest pierwszym arguemntem)
     @patch('frontend.views.send_user_notification')
     @patch('time.sleep', return_value=None)
-    def test_mock_pickup_by_courier_post(self, mock_notify):
+    def test_mock_pickup_by_courier_post(self, mock_sleep, mock_notify):
         url = reverse('mock_pickup_by_courier')
         response = self.client.post(url, {'parcel_id': self.parcel.id})
         self.parcel.refresh_from_db()
@@ -43,7 +57,7 @@ class ParcelAPITestCase(TestCase):
 
     @patch('frontend.views.send_user_notification')
     @patch('time.sleep', return_value=None)
-    def test_mock_deliver_to_machine_post(self, mock_notify):
+    def test_mock_deliver_to_machine_post(self, mock_sleep, mock_notify):
         url = reverse('mock_deliver_to_machine')
         response = self.client.post(url, {'parcel_id': self.parcel.id})
         self.parcel.refresh_from_db()
@@ -53,7 +67,7 @@ class ParcelAPITestCase(TestCase):
 
     @patch('frontend.views.send_user_notification')
     @patch('time.sleep', return_value=None)
-    def test_mock_store_parcel_post(self, mock_notify):
+    def test_mock_store_parcel_post(self, mock_sleep, mock_notify):
         url = reverse('mock_store_parcel')
         response = self.client.post(url, {'parcel_id': self.parcel.id})
         self.parcel.refresh_from_db()
@@ -68,7 +82,7 @@ class ParcelAPITestCase(TestCase):
         self.assertFalse(data.get('success'))
 
     @patch('time.sleep', return_value=None)
-    def test_mock_receive_parcel_post(self):
+    def test_mock_receive_parcel_post(self, mock_sleep):
         url = reverse('mock_receive_parcel')
         response = self.client.post(url, {'parcel_id': self.parcel.id})
         self.parcel.refresh_from_db()

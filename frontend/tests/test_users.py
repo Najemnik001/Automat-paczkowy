@@ -14,6 +14,7 @@ class CustomUserModelTest(TestCase):
         user = User.objects.create_user(
             username="admin1",
             password="admin123",
+            email="admin@example.com",
             role="admin",
             usersurname="Kowalski"
         )
@@ -24,6 +25,7 @@ class CustomUserModelTest(TestCase):
         user = User.objects.create_user(
             username="kurier",
             password="kurier123",
+            email="courier@example.com",
             role="courier",
             usersurname="Nowak"
         )

@@ -3,61 +3,111 @@
 <head>
     <meta charset="UTF-8">
     <title>Rejestracja</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
+        body {
+            background: linear-gradient(to right, #ff4d4f, #1890ff);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .form-container {
+            background: #fff;
+            color: #000;
+            padding: 30px;
+            border-radius: 0;
+            width: 400px;
+        }
+
+        input {
+            border-radius: 0;
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            border-radius: 0;
+            width: 100%;
+        }
+
         .errorlist {
             color: red;
             list-style-type: none;
             padding-left: 0;
         }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .link-btn {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            background: #f0f0f0;
+            padding: 5px;
+            text-decoration: none;
+            color: #000;
+        }
+
+        .link-btn:hover {
+            background: #ddd;
+        }
     </style>
 </head>
 <body>
-    <h1>Rejestracja</h1>
+    <div class="form-container">
+        <h1>Rejestracja</h1>
 
-    <form method="post">
-        {% csrf_token %}
+        <form method="post">
+            {% csrf_token %}
 
-        <p>
-            <label for="{{ form.username.id_for_label }}">Imię:</label>
-            {{ form.username }}
-        </p>
+            <div class="mb-3">
+                <label for="{{ form.username.id_for_label }}">Imię:</label>
+                {{ form.username }}
+            </div>
 
-        <p>
-            <label for="{{ form.usersurname.id_for_label }}">Nazwisko:</label>
-            {{ form.usersurname }}
-        </p>
+            <div class="mb-3">
+                <label for="{{ form.usersurname.id_for_label }}">Nazwisko:</label>
+                {{ form.usersurname }}
+            </div>
 
-        <p>
-            <label for="{{ form.email.id_for_label }}">Email:</label>
-            {{ form.email }}
-        </p>
+            <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}">Email:</label>
+                {{ form.email }}
+            </div>
 
-        <p>
-            <label for="{{ form.password1.id_for_label }}">Hasło:</label>
-            {{ form.password1 }}
-        </p>
+            <div class="mb-3">
+                <label for="{{ form.password1.id_for_label }}">Hasło:</label>
+                {{ form.password1 }}
+            </div>
 
-        <p>
-            <label for="{{ form.password2.id_for_label }}">Powtórz hasło:</label>
-            {{ form.password2 }}
-        </p>
+            <div class="mb-3">
+                <label for="{{ form.password2.id_for_label }}">Powtórz hasło:</label>
+                {{ form.password2 }}
+            </div>
 
-        <button type="submit">Zarejestruj się</button>
-    </form>
+            <button type="submit" class="btn btn-primary">Zarejestruj się</button>
+        </form>
 
-    {% if form.errors and form.is_bound %}
-        <ul class="errorlist">
-            {% for field in form %}
-                {% for error in field.errors %}
+        {% if form.errors and form.is_bound %}
+            <ul class="errorlist mt-3">
+                {% for field in form %}
+                    {% for error in field.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.non_field_errors %}
                     <li>{{ error }}</li>
                 {% endfor %}
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+            </ul>
+        {% endif %}
 
-    <p>Masz konto? <a href="{% url 'login' %}">Zaloguj się!</a></p>
+        <a href="{% url 'login' %}" class="link-btn">Masz konto? Zaloguj się!</a>
+    </div>
 </body>
 </html>

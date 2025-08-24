@@ -11,16 +11,16 @@ class Parcel(models.Model):
     name = models.CharField(max_length=255)
 
     STATUS_CHOICES = [
-        ('shipment_ordered', 'Shipment ordered'),
-        ('stored_in_machine', 'Stored in machine'),
-        ('picked_up_by_courier', 'Picked up by courier'),
-        ('delivered_to_machine', 'Delivered to machine'),
-        ('received_by_recipient', 'Received by recipient'),
+        ('shipment_ordered', 'Przesyłka zamówiona'),
+        ('stored_in_machine', 'Umieszona w skrytce'),
+        ('picked_up_by_courier', 'Odebrana przez kuriera'),
+        ('delivered_to_machine', 'Dostarczona do skrytki docelowej'),
+        ('received_by_recipient', 'Odebrana przez odbiorcę'),
     ]
 
     size_choices = [
-        ('small', 'Small'),
-        ('large', 'Large'),
+        ('small', 'Mała'),
+        ('large', 'Duża'),
     ]
 
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='shipment_ordered')

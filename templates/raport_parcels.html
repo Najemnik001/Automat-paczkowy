@@ -1,30 +1,113 @@
 <!DOCTYPE html>
-<html>
+<html lang="pl">
 <head>
+    <meta charset="UTF-8">
     <title>Raport przesyłek</title>
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body{
+            min-height:100vh;
+            background: linear-gradient(135deg,#c62828,#1565c0);
+            display:flex;align-items:flex-start;justify-content:center;
+            padding:40px 16px;
+        }
+        .page-card{
+            background:#fff;color:#000; width:100%; max-width:1200px;
+            border-radius:0; box-shadow:0 6px 14px rgba(0,0,0,.15);
+            padding:28px;
+        }
+        .btn, .table, .form-control { border-radius:0 !important; } /* kanciaste */
+        .section-title{
+            border-left:6px solid #1565c0;
+            padding-left:12px; margin-bottom:16px;
+        }
+        .badge-status { font-weight:600; }
+    </style>
 </head>
 <body>
-    <h1>Raport przesyłek</h1>
-    <a href="{% url 'admin_panel' %}"><button>Wróć</button></a>
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Nadawca</th>
-            <th>Odbiorca</th>
-            <th>Status</th>
-            <th>Data dostarczenia</th>
-            <th>Kurier</th>
-        </tr>
-        {% for parcel in parcels %}
-        <tr>
-            <td>{{ parcel.id }}</td>
-            <td>{{ parcel.sender.username }}</td>
-            <td>{{ parcel.receiver.username }}</td>
-            <td>{{ parcel.status }}</td>
-            <td>{{ parcel.delivered_at|default:"Brak" }}</td>
-            <td>{{ parcel.courier_number_id.username|default:"Brak" }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+<div class="page-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="section-title m-0">Raport przesyłek</h2>
+        <a href="{% url 'admin_panel' %}" class="btn btn-outline-secondary">Wróć</a>
+    </div>
+
+    <form method="get" class="mb-3">
+           <div class="input-group">
+               <input type="text"
+                      name="q"
+                      value="{{ q }}"
+                      class="form-control"
+                      placeholder="Szukaj: e-mail nadawcy/odbiorcy/kuriera, nazwa/adres automatu">
+               <button type="submit" class="btn btn-primary">Szukaj</button>
+               {% if q %}
+                   <a href="{% url 'parcel_report' %}" class="btn btn-outline-secondary">Wyczyść</a>
+               {% endif %}
+           </div>
+       </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover align-middle mb-0">
+            <thead class="table-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">ID</th>
+                <th scope="col">Nadawca</th>
+                <th scope="col">Odbiorca</th>
+                <th scope="col">Status</th>
+                <th scope="col">Data dostarczenia</th>
+                <th scope="col">Kurier</th>
+                <th scope="col">Automat nadawczy</th>
+                <th scope="col">Automat docelowy</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for parcel in parcels %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ parcel.id }}</td>
+                    <td>{{ parcel.sender.email }}</td>
+                    <td>{{ parcel.receiver.email }}</td>
+                    <td>
+                        {% if parcel.status == 'shipment_ordered' %}
+                            <span class="badge bg-secondary badge-status">{{ parcel.get_status_display }}</span>
+                        {% elif parcel.status == 'stored_in_machine' %}
+                            <span class="badge bg-primary badge-status">{{ parcel.get_status_display }}</span>
+                        {% elif parcel.status == 'picked_up_by_courier' %}
+                            <span class="badge bg-warning text-dark badge-status">{{ parcel.get_status_display }}</span>
+                        {% elif parcel.status == 'delivered_to_machine' %}
+                            <span class="badge bg-info text-dark badge-status">{{ parcel.get_status_display }}</span>
+                        {% elif parcel.status == 'received_by_recipient' %}
+                            <span class="badge bg-success badge-status">{{ parcel.get_status_display }}</span>
+                        {% else %}
+                            <span class="badge bg-dark">unknown</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ parcel.delivered_at|date:"Y-m-d H:i"|default:"Brak" }}</td>
+                    <td>{{ parcel.courier_number.email|default:"Brak" }}</td>
+                    <td>
+                        {% if parcel.sent_from_machine %}
+                            {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
+                        {% else %}Brak{% endif %}
+                    </td>
+                    <td>
+                        {% if parcel.sent_to_machine %}
+                            {{ parcel.sent_to_machine.name }} ({{ parcel.sent_to_machine.location }})
+                        {% else %}Brak{% endif %}
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center text-muted">Brak przesyłek do wyświetlenia.</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Bootstrap JS (opcjonalnie) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

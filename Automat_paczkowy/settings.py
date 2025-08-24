@@ -129,6 +129,11 @@ REST_FRAMEWORK = {
     ],
 }
 
+AUTHENTICATION_BACKENDS = [
+    'users.auth_backends.EmailBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 WEBPUSH_SETTINGS = {
     "VAPID_PUBLIC_KEY": 'BOGll6XO21C7GqXNJTIazL0ksmY9mNPYW-1StB3XFuQcXuYbMQDjBLoM7a3hUyWoOOK7akdWWsyccedAg942peo',
     "VAPID_PRIVATE_KEY": '3WLHC_B2pFc5qe6MwNNYRHnSSeDJwGwW3SNXEhOnwJ4',

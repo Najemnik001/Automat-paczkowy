@@ -1,122 +1,229 @@
 <!DOCTYPE html>
 {% load webpush_notifications %}
-<html lang="en">
+<html lang="pl">
 <head>
     <meta charset="UTF-8">
     <title>Strona Główna</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     {% webpush_header %}
+    <style>
+        body{
+            min-height:100vh;
+            background: linear-gradient(to right, #ff4d4f, #1890ff);
+            display:flex;align-items:flex-start;justify-content:center;
+            padding:40px 16px;
+        }
+        .page-card{
+            background:#fff;color:#000; width:100%; max-width:1000px;
+            border-radius:0; box-shadow:0 6px 14px rgba(0,0,0,.15);
+            padding:28px;
+        }
+        .btn, .form-control, .list-group-item{
+            border-radius:0 !important;
+        }
+        .section-title{
+            border-left:6px solid #1565c0;
+            padding-left:12px; margin-top:24px; margin-bottom:12px;
+        }
+        .badge-status{ font-weight:600; }
+        .parcel-actions .btn{ margin-left:8px; }
+        .logout-wrap{ gap:8px; }
+    </style>
 </head>
 <body>
-    <h1>Witaj, {{ user.username }}!</h1>
-    
-    <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Wyloguj się</button>
-        {% webpush_button %}
-    </form>
+<div class="page-card">
 
-    <h2>Paczki, które są nadane do Ciebie:</h2>
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3">
+        <h1 class="m-0">Witaj, {{ user.username }}!</h1>
+        <div class="d-flex logout-wrap">
+                <div class="d-flex logout-wrap align-items-center gap-2">
+                    <form action="{% url 'logout' %}" method="post" class="m-0">
+                      {% csrf_token %}
+                      <button type="submit" class="btn btn-outline-danger">Wyloguj się</button>
+                    </form>
+                    
+                    <!-- Ukryty przycisk webpush -->
+                    <span id="webpush-hidden" style="position:absolute; left:-9999px; top:auto;">
+                      {% webpush_button %}
+                    </span>
+                    
+                    <!-- Nasz widoczny przycisk -->
+                    <button id="webpush-toggle" type="button" class="btn btn-outline-primary">
+                      Włącz powiadomienia push
+                    </button>
+                </div>
+        </div>
+    </div>
+
+    <h4 class="section-title">Paczki nadane do Ciebie</h4>
     {% if received_parcels %}
-        <ul>
+        <ul class="list-group mb-3">
             {% for parcel in received_parcels %}
-                <li>
-                    {{ parcel.name }} - {{ parcel.status }}
-                    {% if parcel.delivered_at %}
-                        - Dostarczona dnia {{ parcel.delivered_at }}
-                    {% endif %}
-                    {% if parcel.courier_number %}
-                        - Kurier: {{ parcel.courier_number }}
-                    {% endif %}
-                    {% if parcel.sent_to_machine %}
-                        - Paczkomat odbiorczy: {{ parcel.sent_to_machine.name }} ({{ parcel.sent_to_machine.location }})
-                    {% endif %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="me-3">
+                        <div class="fw-semibold">{{ parcel.name }}</div>
+                        <small>
+                            {% if parcel.status == 'shipment_ordered' %}
+                                <span class="badge bg-secondary badge-status">{{ parcel.get_status_display }}</span>
+                            {% elif parcel.status == 'stored_in_machine' %}
+                                <span class="badge bg-primary badge-status">{{ parcel.get_status_display }}</span>
+                            {% elif parcel.status == 'picked_up_by_courier' %}
+                                <span class="badge bg-warning text-dark badge-status">{{ parcel.get_status_display }}</span>
+                            {% elif parcel.status == 'delivered_to_machine' %}
+                                <span class="badge bg-info text-dark badge-status">{{ parcel.get_status_display }}</span>
+                            {% elif parcel.status == 'received_by_recipient' %}
+                                <span class="badge bg-success badge-status">{{ parcel.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-dark">unknown</span>
+                            {% endif %}
+                            {% if parcel.delivered_at %} • Dostarczona: {{ parcel.delivered_at|date:"Y-m-d H:i"|default:"Brak" }}{% endif %}
+                            {% if parcel.courier_number %} • Kurier: {{ parcel.courier_number }}{% endif %}
+                            {% if parcel.sent_to_machine %}
+                                • Automat odbiorczy: {{ parcel.sent_to_machine.name }} ({{ parcel.sent_to_machine.location }})
+                            {% endif %}
+                        </small>
+                    </div>
 
                     {% if parcel.status == 'delivered_to_machine' %}
-                        <button class="receive_parcel" data-parcel-id="{{ parcel.id }}">Odbierz paczkę</button>
-                        
+                        <div class="parcel-actions">
+                            <button class="btn btn-success receive_parcel"
+                                    data-parcel-id="{{ parcel.id }}">
+                                Odbierz paczkę
+                            </button>
+                        </div>
                     {% endif %}
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>Nie masz paczek jadących do Ciebie.</p>
+        <div class="alert alert-info">Nie masz paczek jadących do Ciebie.</div>
     {% endif %}
 
-    <h2>Twoje wysłane paczki:</h2>
+    <h4 class="section-title">Twoje wysłane paczki</h4>
     {% if sent_parcels %}
-        <ul>
+        <ul class="list-group mb-3">
             {% for parcel in sent_parcels %}
-                <li>
-                    {{ parcel.name }} - {{ parcel.status }}
-                    {% if parcel.delivered_at %}
-                        - Dostarczona dnia {{ parcel.delivered_at }}
-                    {% endif %}
-                    {% if parcel.courier_number %}
-                        - Kurier: {{ parcel.courier_number }}
-                    {% endif %}
-                    {% if parcel.sent_from_machine %}
-                        - Paczkomat nadawczy: {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
-                    {% endif %}
+                <li class="list-group-item d-flex justify-content-between align-items-start">
+                    <div class="me-3">
+                        <div class="fw-semibold">{{ parcel.name }}</div>
+                        <small>
+                            {% if parcel.status == 'shipment_ordered' %}
+                                <span class="badge bg-secondary badge-status">{{ parcel.get_status_display }}</span>
+                            {% elif parcel.status == 'stored_in_machine' %}
+                                <span class="badge bg-primary badge-status">{{ parcel.get_status_display }}</span>
+                            {% elif parcel.status == 'picked_up_by_courier' %}
+                                <span class="badge bg-warning text-dark badge-status">{{ parcel.get_status_display }}</span>
+                            {% elif parcel.status == 'delivered_to_machine' %}
+                                <span class="badge bg-info text-dark badge-status">{{ parcel.get_status_display }}</span>
+                            {% elif parcel.status == 'received_by_recipient' %}
+                                <span class="badge bg-success badge-status">{{ parcel.get_status_display }}</span>
+                            {% else %}
+                                <span class="badge bg-dark">unknown</span>
+                            {% endif %}
+                            {% if parcel.delivered_at %} • Dostarczona: {{ parcel.delivered_at|date:"Y-m-d H:i"|default:"Brak" }}{% endif %}
+                            {% if parcel.courier_number %} • Kurier: {{ parcel.courier_number }}{% endif %}
+                            {% if parcel.sent_from_machine %}
+                                • Automat nadawczy: {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
+                            {% endif %}
+                        </small>
+                    </div>
 
                     {% if parcel.status == 'shipment_ordered' %}
-                        <button class="store_in_machine" data-parcel-id="{{ parcel.id }}">Przekaż paczkę do paczkomatu</button>
+                        <div class="parcel-actions">
+                            <button class="btn btn-primary store_in_machine"
+                                    data-parcel-id="{{ parcel.id }}">
+                                Przekaż paczkę do paczkomatu
+                            </button>
+                        </div>
                     {% endif %}
                 </li>
             {% endfor %}
         </ul>
     {% else %}
-        <p>Nie masz wysłanych paczek.</p>
+        <div class="alert alert-info">Nie masz wysłanych paczek.</div>
     {% endif %}
-    
-    <a href="{% url 'create_parcel' %}">
-        <button>Przejdź do nadawania paczki</button>
-    </a>
 
-    <script>
-        $(document).ready(function(){
-            $(".store_in_machine").click(function(){
-                var parcelId = $(this).data('parcel-id');
-                alert("Umieść paczkę w automacie");
-                $.ajax({
-                    url: "{% url 'mock_store_parcel' %}",
-                    type: "POST",
-                    data: {
-                        'parcel_id': parcelId,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function(response) {
-                        alert("Paczka została umieszczona w skrytce!");
-                        location.reload();
-                    },
-                    error: function() {
-                        alert("Wystąpił problem podczas procesu.");
-                    }
-                });
-            });
 
-            $(".receive_parcel").click(function(){
-                var parcelId = $(this).data('parcel-id');
-                alert("Otwórz skrytkę i odbierz paczkę");
-                $.ajax({
-                    url: "{% url 'mock_receive_parcel' %}",
-                    type: "POST",
-                    data: {
-                        'parcel_id': parcelId,
-                        'csrfmiddlewaretoken': '{{ csrf_token }}'
-                    },
-                    success: function(response) {
-                        alert("Przesyłka odebrana. Dziękujemy za skorzystanie z naszych usług!");
-                        location.reload();
-                    },
-                    error: function() {
-                        alert("Wystąpił problem podczas odbioru paczki.");
-                    }
-                });
+    <a href="{% url 'create_parcel' %}" class="btn btn-outline-primary">Przejdź do nadawania paczki</a>
+</div>
+
+<script>
+    $(function(){
+        $(".store_in_machine").click(function(){
+            var parcelId = $(this).data('parcel-id');
+            alert("Umieść paczkę w automacie");
+            $.ajax({
+                url: "{% url 'mock_store_parcel' %}",
+                type: "POST",
+                data: {
+                    'parcel_id': parcelId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function() {
+                    alert("Paczka została umieszczona w skrytce!");
+                    location.reload();
+                },
+                error: function() {
+                    alert("Wystąpił problem podczas procesu.");
+                }
             });
         });
-    </script>
 
+        $(".receive_parcel").click(function(){
+            var parcelId = $(this).data('parcel-id');
+            alert("Otwórz skrytkę i odbierz paczkę");
+            $.ajax({
+                url: "{% url 'mock_receive_parcel' %}",
+                type: "POST",
+                data: {
+                    'parcel_id': parcelId,
+                    'csrfmiddlewaretoken': '{{ csrf_token }}'
+                },
+                success: function() {
+                    alert("Przesyłka odebrana. Dziękujemy za skorzystanie z naszych usług!");
+                    location.reload();
+                },
+                error: function() {
+                    alert("Wystąpił problem podczas odbioru paczki.");
+                }
+            });
+        });
+    });
 
+    document.addEventListener('DOMContentLoaded', function(){
+      var hiddenBtn = document.querySelector('#webpush-hidden button, #webpush-hidden a, #webpush-hidden [data-webpush]');
+      var visibleBtn = document.getElementById('webpush-toggle');
+      if(!hiddenBtn || !visibleBtn) return;
+    
+      function isSubscribed() {
+        var txt = (hiddenBtn.textContent || '').toLowerCase();
+        return hiddenBtn.classList.contains('subscribed') ||
+               txt.includes('disable') || txt.includes('unsubscribe') ||
+               txt.includes('wyłącz');
+      }
+    
+      function updateLabel() {
+        visibleBtn.textContent = isSubscribed()
+          ? 'Wyłącz powiadomienia push'
+          : 'Włącz powiadomienia push';
+      }
+    
+      // Ustaw etykietę na start
+      updateLabel();
+    
+      // Obsługa kliknięcia – delegujemy do ukrytego przycisku
+      visibleBtn.addEventListener('click', function(){
+        visibleBtn.disabled = true;
+        try { hiddenBtn.click(); } catch(e) {}
+        // Daj bibliotece moment na zmianę stanu
+        setTimeout(function(){
+          updateLabel();
+          visibleBtn.disabled = false;
+        });
+      });
+    });
+
+</script>
 </body>
 </html>

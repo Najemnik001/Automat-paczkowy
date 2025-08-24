@@ -1,6 +1,6 @@
 from django.conf import settings
 from users.forms import RegisterForm
-from django.contrib.auth.forms import AuthenticationForm
+from users.forms import CustomAuthenticationForm
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib.auth.decorators import login_required
 from parcels.forms import ParcelForm
@@ -17,6 +17,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 import time
 from webpush import send_user_notification
+from django.views.decorators.http import require_POST
 
 User = settings.AUTH_USER_MODEL
 
@@ -37,25 +38,17 @@ def register(request):
 
 def user_login(request):
     if request.method == 'POST':
-        form = AuthenticationForm(data=request.POST)
+        form = CustomAuthenticationForm(data=request.POST)
         if form.is_valid():
-            username = form.cleaned_data.get('username')
-            password = form.cleaned_data.get('password')
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                login(request, user)
-
-                if user.role == 'admin':
-                    return redirect('admin_panel')
-                elif user.role == 'courier':
-                    return redirect('courier_view')
-                else:
-                    return redirect('main_page')
-            else:
-                messages.error(request, "Nieprawidłowe dane logowania.")
+            login(request, form.get_user())
+            user = form.get_user()
+            if user.role == 'admin':
+                return redirect('admin_panel')
+            elif user.role == 'courier':
+                return redirect('courier_view')
+            return redirect('main_page')
     else:
-        form = AuthenticationForm()
-
+        form = CustomAuthenticationForm()
     return render(request, 'login.html', {'form': form})
 @login_required
 def main_page(request):
@@ -113,26 +106,29 @@ def is_admin(user):
 
 
 
-# Panel administratora
+
 @user_passes_test(is_admin)
 def admin_panel(request):
-    if request.method == 'POST':
-        search_lockers = request.POST.get('search_lockers')
-        search_users = request.POST.get('search_users')
+    search_lockers = (request.GET.get('search_lockers') or '').strip()
+    search_users   = (request.GET.get('search_users') or '').strip()
 
-        lockers = Locker.objects.filter(
-            Q(name__icontains=search_lockers) | Q(location__icontains=search_lockers)
-        ) if search_lockers else Locker.objects.none()
+    lockers = Locker.objects.filter(
+        Q(name__icontains=search_lockers) | Q(location__icontains=search_lockers)
+    ) if search_lockers else Locker.objects.none()
 
-        users = CustomUser.objects.filter(
-            Q(email__icontains=search_users) |
-            Q(username__icontains=search_users) |
-            Q(usersurname__icontains=search_users)
-        ) if search_users else CustomUser.objects.none()
+    users = CustomUser.objects.filter(
+        Q(email__icontains=search_users) |
+        Q(username__icontains=search_users) |
+        Q(usersurname__icontains=search_users)
+    ) if search_users else CustomUser.objects.none()
 
-        return render(request, 'admin_panel.html', {'lockers': lockers, 'users': users})
-
-    return render(request, 'admin_panel.html')
+    context = {
+        'lockers': lockers,
+        'users': users,
+        'search_lockers': search_lockers,
+        'search_users': search_users,
+    }
+    return render(request, 'admin_panel.html', context)
 
 
 @user_passes_test(is_admin)
@@ -230,20 +226,69 @@ def delete_locker(request, locker_id):
 def delete_user(request, user_id):
     user = get_object_or_404(CustomUser, id=user_id)
     user.delete()
-    return redirect('admin_panel')
+    return redirect('user_report')
 
 def is_courier(user):
     return user.is_authenticated and user.role == 'courier'
 
 @user_passes_test(is_admin)
 def user_report(request):
-    users = CustomUser.objects.all()
+    users = CustomUser.objects.all().order_by('id')
     return render(request, 'raport_users.html', {'users': users})
 
 @user_passes_test(is_admin)
+def change_user_role(request, user_id):
+    if request.method != 'POST':
+        messages.error(request, "Nieprawidłowa metoda.")
+        return redirect('user_report')
+
+    user = get_object_or_404(CustomUser, id=user_id)
+    new_role = request.POST.get('role')
+
+    if new_role not in ['admin', 'courier', 'client']:
+        messages.error(request, "Nieprawidłowa rola.")
+        return redirect('user_report')
+
+    user.role = new_role
+    user.save()
+    messages.success(request, f"Zmieniono rolę użytkownika {user.username} na: {new_role}.")
+    return redirect('user_report')
+
+@user_passes_test(is_admin)
+@require_POST
+def update_user_role(request, user_id):
+    user = get_object_or_404(CustomUser, id=user_id)
+    new_role = request.POST.get('role')
+    if new_role not in ('admin', 'courier', 'client'):
+        return JsonResponse({'success': False, 'message': 'Nieprawidłowa rola.'}, status=400)
+    user.role = new_role
+    user.save()
+    return JsonResponse({'success': True})
+
+@user_passes_test(is_admin)
 def parcel_report(request):
+    q = (request.GET.get('q') or '').strip()
+
     parcels = Parcel.objects.all()
-    return render(request, 'raport_parcels.html', {'parcels': parcels})
+
+    if q:
+        parcels = parcels.filter(
+            Q(sender__email__icontains=q) |
+            Q(receiver__email__icontains=q) |
+            Q(courier_number__email__icontains=q) |
+            Q(sent_from_machine__name__icontains=q) |
+            Q(sent_from_machine__location__icontains=q) |
+            Q(sent_to_machine__name__icontains=q) |
+            Q(sent_to_machine__location__icontains=q)
+        )
+
+    context = {
+        'parcels': parcels.select_related(
+            'sender', 'receiver', 'courier_number', 'sent_from_machine', 'sent_to_machine'
+        ),
+        'q': q,
+    }
+    return render(request, 'raport_parcels.html', context)
 
 @user_passes_test(is_courier)
 def courier_view(request):
