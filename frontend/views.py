@@ -18,6 +18,7 @@ from django.utils import timezone
 import time
 from webpush import send_user_notification
 from django.views.decorators.http import require_POST
+from parcels.models import ParcelCourierHistory, CourierAction
 
 User = settings.AUTH_USER_MODEL
 
@@ -282,10 +283,13 @@ def parcel_report(request):
             Q(sent_to_machine__location__icontains=q)
         )
 
+
     context = {
         'parcels': parcels.select_related(
-            'sender', 'receiver', 'courier_number', 'sent_from_machine', 'sent_to_machine'
-        ),
+        'sender', 'receiver', 'courier_number', 'sent_from_machine', 'sent_to_machine'
+    ).prefetch_related(
+        'courier_history__courier'
+    ),
         'q': q,
     }
     return render(request, 'raport_parcels.html', context)
@@ -311,8 +315,8 @@ def courier_view(request):
 
     lockers_with_parcels = []
     for locker in lockers:
-        to_pick_up = locker.sent_parcels.filter(status='stored_in_machine')  # paczki do odbioru z automatu
-        to_deliver = locker.received_parcels.filter(status='picked_up_by_courier')  # paczki do dostarczenia do automatu
+        to_pick_up = locker.sent_parcels.filter(status='stored_in_machine')
+        to_deliver = locker.received_parcels.filter(status='picked_up_by_courier')
 
         if to_pick_up.exists() or to_deliver.exists():
             lockers_with_parcels.append({
@@ -335,7 +339,10 @@ def mock_pickup_by_courier(request):
             time.sleep(5)
 
             parcel.status = "picked_up_by_courier"
+            parcel.courier_number = request.user
             parcel.save()
+
+            parcel.log_courier_action(request.user, CourierAction.PICKUP)
 
             payload = {
                 "head": "Paczka w drodze!",
@@ -366,7 +373,10 @@ def mock_deliver_to_machine(request):
             time.sleep(5)
 
             parcel.status = "delivered_to_machine"
+            parcel.courier_number = request.user
             parcel.save()
+
+            parcel.log_courier_action(request.user, CourierAction.DROPOFF)
 
             payload = {
                 "head": "Twoja paczka dotarła!",
@@ -401,7 +411,7 @@ def mock_store_parcel(request):
                 payload = {
                     "head": "Twoja paczka jest już w automacie!",
                     "body": f"Paczka '{parcel.name}' od {parcel.sender.username} została umieszczona w automacie.",
-                    "icon": "https://i.imgur.com/dRDxiCQ.png"  # opcjonalna ikonka
+                    "icon": "https://i.imgur.com/dRDxiCQ.png"
                 }
                 send_user_notification(user=parcel.receiver, payload=payload, ttl=1000)
 

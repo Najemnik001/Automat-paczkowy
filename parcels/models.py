@@ -4,6 +4,10 @@ from users.models import CustomUser
 from lockers.models import Locker
 
 
+class CourierAction(models.TextChoices):
+    PICKUP = 'pickup', 'Odebrał z automatu'
+    DROPOFF = 'dropoff', 'Zostawił w automacie'
+
 class Parcel(models.Model):
 
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_parcels', on_delete=models.CASCADE)
@@ -36,3 +40,23 @@ class Parcel(models.Model):
 
     def is_delivered(self):
         return self.status == 'received_by_recipient'
+
+    def log_courier_action(self, courier, action: CourierAction):
+        from .models import ParcelCourierHistory
+        ParcelCourierHistory.objects.create(
+            parcel=self,
+            courier=courier,
+            action=action,
+        )
+
+
+
+class ParcelCourierHistory(models.Model):
+    parcel = models.ForeignKey('Parcel', related_name='courier_history', on_delete=models.CASCADE)
+    courier = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='handled_parcels', on_delete=models.CASCADE)
+    action = models.CharField(max_length=20, choices=CourierAction.choices)
+    dateTime = models.DateTimeField(auto_now_add=True)
+
+
+    class Meta:
+        ordering = ['-dateTime']

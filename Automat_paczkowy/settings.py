@@ -143,7 +143,7 @@ WEBPUSH_SETTINGS = {
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pl'
 
 TIME_ZONE = 'UTC'
 
