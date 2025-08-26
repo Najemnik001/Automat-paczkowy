@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -90,12 +91,15 @@ DATABASES = {
 
 # DATABASES = {
 #     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': config('DATABASE_NAME'),
-#         'USER': config('DATABASE_USER'),
-#         'PASSWORD': config('DATABASE_PASSWORD'),
-#         'HOST': config('DATABASE_HOST', default='localhost'),
-#         'PORT': config('DATABASE_PORT', default=5432, cast=int),
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': os.environ.get('DB_NAME', 'twojabaza'),  # zmienisz na PythonAnywhere
+#         'USER': os.environ.get('DB_USER', 'twojuser'),   # zmienisz na PythonAnywhere
+#         'PASSWORD': os.environ.get('DB_PASSWORD', 'twojehaslo'),
+#         'HOST': os.environ.get('DB_HOST', '127.0.0.1'),  # na PythonAnywhere będzie inny
+#         'PORT': '3306',
+#         'OPTIONS': {
+#             'charset': 'utf8mb4',
+#         },
 #     }
 # }
 
