@@ -19,7 +19,7 @@
             border-radius:0; box-shadow:0 6px 14px rgba(0,0,0,.15);
             padding:28px;
         }
-        .btn, .form-control, .list-group-item, .card, .modal-content { border-radius:0 !important; } /* kanciaste */
+        .btn, .form-control, .list-group-item, .modal-content { border-radius:0 !important; }
         .section-title{
             border-left:6px solid #1565c0;
             padding-left:12px; margin-top:24px; margin-bottom:12px;
@@ -39,7 +39,6 @@
         </form>
     </div>
 
-    <!-- Główne akcje -->
     <div class="toolbar d-flex flex-wrap gap-8 mb-3">
         <a href="{% url 'parcel_report' %}" class="btn btn-primary">Raport przesyłek</a>
         <a href="{% url 'user_report' %}" class="btn btn-primary">Raport użytkowników</a>
@@ -47,7 +46,6 @@
     </div>
 
     <div class="row g-3">
-        <!-- SZUKAJ SKRYTKI -->
         <div class="col-12 col-lg-6">
             <h4 class="section-title">Szukaj skrytki</h4>
             <form method="get" class="mb-3">
@@ -151,7 +149,6 @@
   </div>
 </div>
 
-<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
@@ -161,8 +158,6 @@
 
   document.addEventListener('DOMContentLoaded', function(){
     bsModal = new bootstrap.Modal(modalEl);
-
-    // Otwieranie modala z danymi użytkownika
     document.querySelectorAll('.open-edit-modal').forEach(btn => {
       btn.addEventListener('click', function(){
         const userId = this.dataset.userId;
@@ -177,8 +172,7 @@
         bsModal.show();
       });
     });
-
-    // Zapis roli (AJAX -> update_user_role)
+      
     document.getElementById('saveRoleBtn').addEventListener('click', function(){
       const userId = document.getElementById('modalUserId').value;
       const role = document.getElementById('modalUserRole').value;

@@ -19,7 +19,7 @@
             border-radius:0; box-shadow:0 6px 14px rgba(0,0,0,.15);
             padding:28px;
         }
-        .btn, .form-control, .list-group-item{
+        .btn, .list-group-item{
             border-radius:0 !important;
         }
         .section-title{
@@ -42,13 +42,11 @@
                       {% csrf_token %}
                       <button type="submit" class="btn btn-outline-danger">Wyloguj się</button>
                     </form>
-                    
-                    <!-- Ukryty przycisk webpush -->
+
                     <span id="webpush-hidden" style="position:absolute; left:-9999px; top:auto;">
                       {% webpush_button %}
                     </span>
-                    
-                    <!-- Nasz widoczny przycisk -->
+
                     <button id="webpush-toggle" type="button" class="btn btn-outline-primary">
                       Włącz powiadomienia push
                     </button>
@@ -78,9 +76,8 @@
                                 <span class="badge bg-dark">unknown</span>
                             {% endif %}
                             {% if parcel.delivered_at %} • Dostarczona: {{ parcel.delivered_at|date:"Y-m-d H:i"|default:"Brak" }}{% endif %}
-                            {% if parcel.courier_number %} • Kurier: {{ parcel.courier_number }}{% endif %}
                             {% if parcel.sent_to_machine %}
-                                • Automat odbiorczy: {{ parcel.sent_to_machine.name }} ({{ parcel.sent_to_machine.location }})
+                                Automat odbiorczy: {{ parcel.sent_to_machine.name }} ({{ parcel.sent_to_machine.location }})
                             {% endif %}
                         </small>
                     </div>
@@ -122,9 +119,8 @@
                                 <span class="badge bg-dark">unknown</span>
                             {% endif %}
                             {% if parcel.delivered_at %} • Dostarczona: {{ parcel.delivered_at|date:"Y-m-d H:i"|default:"Brak" }}{% endif %}
-                            {% if parcel.courier_number %} • Kurier: {{ parcel.courier_number }}{% endif %}
                             {% if parcel.sent_from_machine %}
-                                • Automat nadawczy: {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
+                                Automat nadawczy: {{ parcel.sent_from_machine.name }} ({{ parcel.sent_from_machine.location }})
                             {% endif %}
                         </small>
                     </div>
@@ -208,19 +204,11 @@
           ? 'Wyłącz powiadomienia push'
           : 'Włącz powiadomienia push';
       }
-    
-      // Ustaw etykietę na start
       updateLabel();
-    
-      // Obsługa kliknięcia – delegujemy do ukrytego przycisku
+        
       visibleBtn.addEventListener('click', function(){
         visibleBtn.disabled = true;
         try { hiddenBtn.click(); } catch(e) {}
-        // Daj bibliotece moment na zmianę stanu
-        setTimeout(function(){
-          updateLabel();
-          visibleBtn.disabled = false;
-        });
       });
     });
 

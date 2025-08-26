@@ -9,7 +9,6 @@ class CourierAction(models.TextChoices):
     DROPOFF = 'dropoff', 'Zostawił w automacie'
 
 class Parcel(models.Model):
-
     sender = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='sent_parcels', on_delete=models.CASCADE)
     receiver = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='received_parcels', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
@@ -36,19 +35,17 @@ class Parcel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Parcel {self.name} from {self.sender.username} to {self.receiver.username}"
+        return f"Paczka {self.name} od {self.sender.username} do {self.receiver.username}"
 
     def is_delivered(self):
         return self.status == 'received_by_recipient'
 
     def log_courier_action(self, courier, action: CourierAction):
-        from .models import ParcelCourierHistory
         ParcelCourierHistory.objects.create(
             parcel=self,
             courier=courier,
             action=action,
         )
-
 
 
 class ParcelCourierHistory(models.Model):

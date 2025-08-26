@@ -5,15 +5,15 @@ class Locker(models.Model):
     location = models.CharField(max_length=255)
 
     def __str__(self):
-        return f"Locker: {self.name} at {self.location}"
+        return f"Automat: {self.name} adres: {self.location}"
 
     def get_free_locks(self):
         return self.locks.filter(is_free=True)
 
 class Lock(models.Model):
     SIZE_CHOICES = [
-        ('small', 'Small'),
-        ('large', 'Large'),
+        ('small', 'Mała'),
+        ('large', 'Duża'),
     ]
 
     locker = models.ForeignKey(Locker, on_delete=models.CASCADE, related_name="locks")
@@ -21,4 +21,4 @@ class Lock(models.Model):
     is_free = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"Lock in {self.locker.name} ({self.size}) - {'Free' if self.is_free else 'Occupied'}"
+        return f"Lock in {self.locker.name} ({self.size}) - {'Wolna' if self.is_free else 'Zajęta'}"
