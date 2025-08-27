@@ -347,7 +347,7 @@ def mock_pickup_by_courier(request):
             payload = {
                 "head": "Paczka w drodze!",
                 "body": f"Kurier odebrał twoją paczkę: '{parcel.name}'.",
-                "icon": "https://i.imgur.com/dRDxiCQ.png"
+                "url": "http://localhost:8000/main_page/"
             }
 
             try:
@@ -381,7 +381,6 @@ def mock_deliver_to_machine(request):
             payload = {
                 "head": "Twoja paczka dotarła!",
                 "body": f"Paczka '{parcel.name}' czeka na odbiór w automacie: {parcel.sent_to_machine.name}",
-                "icon": "https://i.imgur.com/dRDxiCQ.png",
                 "url": "http://localhost:8000/main_page/"
             }
 

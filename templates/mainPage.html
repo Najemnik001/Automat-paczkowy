@@ -145,73 +145,93 @@
 </div>
 
 <script>
-    $(function(){
-        $(".store_in_machine").click(function(){
-            var parcelId = $(this).data('parcel-id');
-            alert("Umieść paczkę w automacie");
-            $.ajax({
-                url: "{% url 'mock_store_parcel' %}",
-                type: "POST",
-                data: {
-                    'parcel_id': parcelId,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function() {
-                    alert("Paczka została umieszczona w skrytce!");
-                    location.reload();
-                },
-                error: function() {
-                    alert("Wystąpił problem podczas procesu.");
-                }
-            });
-        });
-
-        $(".receive_parcel").click(function(){
-            var parcelId = $(this).data('parcel-id');
-            alert("Otwórz skrytkę i odbierz paczkę");
-            $.ajax({
-                url: "{% url 'mock_receive_parcel' %}",
-                type: "POST",
-                data: {
-                    'parcel_id': parcelId,
-                    'csrfmiddlewaretoken': '{{ csrf_token }}'
-                },
-                success: function() {
-                    alert("Przesyłka odebrana. Dziękujemy za skorzystanie z naszych usług!");
-                    location.reload();
-                },
-                error: function() {
-                    alert("Wystąpił problem podczas odbioru paczki.");
-                }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function(){
-      var hiddenBtn = document.querySelector('#webpush-hidden button, #webpush-hidden a, #webpush-hidden [data-webpush]');
-      var visibleBtn = document.getElementById('webpush-toggle');
-      if(!hiddenBtn || !visibleBtn) return;
-    
-      function isSubscribed() {
-        var txt = (hiddenBtn.textContent || '').toLowerCase();
-        return hiddenBtn.classList.contains('subscribed') ||
-               txt.includes('disable') || txt.includes('unsubscribe') ||
-               txt.includes('wyłącz');
-      }
-    
-      function updateLabel() {
-        visibleBtn.textContent = isSubscribed()
-          ? 'Wyłącz powiadomienia push'
-          : 'Włącz powiadomienia push';
-      }
-      updateLabel();
-        
-      visibleBtn.addEventListener('click', function(){
-        visibleBtn.disabled = true;
-        try { hiddenBtn.click(); } catch(e) {}
+  // --- akcje paczkowe (bez zmian) ---
+  $(function(){
+    $(".store_in_machine").click(function(){
+      var parcelId = $(this).data('parcel-id');
+      alert("Umieść paczkę w automacie");
+      $.ajax({
+        url: "{% url 'mock_store_parcel' %}",
+        type: "POST",
+        data: {'parcel_id': parcelId, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(){ alert("Paczka została umieszczona w skrytce!"); location.reload(); },
+        error: function(){ alert("Wystąpił problem podczas procesu."); }
       });
     });
 
+    $(".receive_parcel").click(function(){
+      var parcelId = $(this).data('parcel-id');
+      alert("Otwórz skrytkę i odbierz paczkę");
+      $.ajax({
+        url: "{% url 'mock_receive_parcel' %}",
+        type: "POST",
+        data: {'parcel_id': parcelId, 'csrfmiddlewaretoken': '{{ csrf_token }}'},
+        success: function(){ alert("Przesyłka odebrana. Dziękujemy za skorzystanie z naszych usług!"); location.reload(); },
+        error: function(){ alert("Wystąpił problem podczas odbioru paczki."); }
+      });
+    });
+  });
+
+  // --- synchronizacja napisu przycisku webpush ---
+  (function(){
+    function findHiddenBtn(){
+      return document.querySelector('#webpush-hidden button, #webpush-hidden a, #webpush-hidden [data-webpush]');
+    }
+    function isSubscribed(hiddenBtn){
+      var txt = (hiddenBtn.textContent || '').toLowerCase();
+      return hiddenBtn.classList.contains('subscribed') ||
+             txt.includes('disable') || txt.includes('unsubscribe') ||
+             txt.includes('wyłącz') || txt.includes('subskrybowane');
+    }
+    function syncLabel(){
+      if (!hiddenBtn || !visibleBtn) return;
+      visibleBtn.textContent = isSubscribed(hiddenBtn)
+        ? 'Wyłącz powiadomienia push'
+        : 'Włącz powiadomienia push';
+    }
+
+    var visibleBtn = document.getElementById('webpush-toggle');
+    var hiddenBtn  = null;
+
+    // Poczekaj aż wszystko (w tym skrypty webpush) się załadują
+    window.addEventListener('load', function(){
+      hiddenBtn = findHiddenBtn();
+      if (!visibleBtn || !hiddenBtn) return;
+
+      // Ustaw label na start
+      syncLabel();
+
+      // Obserwuj zmiany tekstu/klas ukrytego przycisku (lib zmienia to po subskrypcji)
+      var mo = new MutationObserver(syncLabel);
+      mo.observe(hiddenBtn, {attributes:true, childList:true, subtree:true, attributeFilter:['class']});
+
+      // Klik w widoczny -> przekaż do ukrytego i po chwili zsynchronizuj napis
+      visibleBtn.addEventListener('click', function(){
+        visibleBtn.disabled = true;
+        try { hiddenBtn.click(); } catch(e){}
+        // krótkie opóźnienie na aktualizację stanu w lib
+        setTimeout(function(){
+          syncLabel();
+          visibleBtn.disabled = false;
+        }, 800);
+      });
+    });
+
+    // Awaryjny polling przez kilka sekund (gdyby MutationObserver nie „złapał” pierwszych zmian)
+    var tries = 0;
+    var poll = setInterval(function(){
+      if (!hiddenBtn) hiddenBtn = findHiddenBtn();
+      if (hiddenBtn && visibleBtn){
+        syncLabel();
+        tries++;
+        if (tries > 10) clearInterval(poll);
+      } else {
+        tries++;
+        if (tries > 20) clearInterval(poll);
+      }
+    }, 500);
+  })();
 </script>
+
 </body>
 </html>
