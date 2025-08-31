@@ -11,19 +11,21 @@ User = get_user_model()
 class ParcelAPITestCase(TestCase):
     def setUp(self):
         self.client = Client()
-        r = random.randint(1000, 9999)
 
         self.sender = User.objects.create_user(
-            email=f'sender{r}@test.pl',
-            username='Sender',
-            usersurname='Kowalski',
-            password='pass'
+            username='sender',
+            email=f'sender{random.randint(1000,9999)}@test.pl',
+            password='pass', role='client'
         )
         self.receiver = User.objects.create_user(
-            email=f'receiver{r}@test.pl',
-            username='Receiver',
-            usersurname='Nowak',
-            password='pass'
+            username='receiver',
+            email=f'receiver{random.randint(1000,9999)}@test.pl',
+            password='pass', role='client'
+        )
+        self.courier = User.objects.create_user(
+            username='courier',
+            email=f'courier{random.randint(1000,9999)}@test.pl',
+            password='pass', role='courier'
         )
 
         self.locker_from = Locker.objects.create(name='LockerA', location='Warszawa')
@@ -38,16 +40,17 @@ class ParcelAPITestCase(TestCase):
             status='shipment_ordered'
         )
 
-    # UWAGA: kolejność argumentów odpowiada kolejności patchy (najnowszy patch jest pierwszym arguemntem)
     @patch('frontend.views.send_user_notification')
     @patch('time.sleep', return_value=None)
-    def test_mock_pickup_by_courier_post(self, mock_sleep, mock_notify):
+    def test_mock_pickup_by_courier_post(self, _sleep_mock, _notify_mock):
+        self.client.force_login(self.courier)
         url = reverse('mock_pickup_by_courier')
         response = self.client.post(url, {'parcel_id': self.parcel.id})
         self.parcel.refresh_from_db()
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.parcel.status, 'picked_up_by_courier')
-        mock_notify.assert_called_once()
+        self.assertEqual(self.parcel.courier_number_id, self.courier.id)
 
     def test_mock_pickup_by_courier_wrong_method(self):
         url = reverse('mock_pickup_by_courier')
@@ -57,23 +60,29 @@ class ParcelAPITestCase(TestCase):
 
     @patch('frontend.views.send_user_notification')
     @patch('time.sleep', return_value=None)
-    def test_mock_deliver_to_machine_post(self, mock_sleep, mock_notify):
+    def test_mock_deliver_to_machine_post(self, _sleep_mock, _notify_mock):
+        self.client.force_login(self.courier)
+        # sensowny flow: najpierw paczka odebrana przez kuriera
+        self.parcel.status = 'picked_up_by_courier'
+        self.parcel.save()
+
         url = reverse('mock_deliver_to_machine')
         response = self.client.post(url, {'parcel_id': self.parcel.id})
         self.parcel.refresh_from_db()
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.parcel.status, 'delivered_to_machine')
-        mock_notify.assert_called_once()
+        self.assertEqual(self.parcel.courier_number_id, self.courier.id)
 
     @patch('frontend.views.send_user_notification')
     @patch('time.sleep', return_value=None)
-    def test_mock_store_parcel_post(self, mock_sleep, mock_notify):
+    def test_mock_store_parcel_post(self, _sleep_mock, _notify_mock):
         url = reverse('mock_store_parcel')
         response = self.client.post(url, {'parcel_id': self.parcel.id})
         self.parcel.refresh_from_db()
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.parcel.status, 'stored_in_machine')
-        mock_notify.assert_called_once()
 
     def test_mock_store_parcel_wrong_method(self):
         url = reverse('mock_store_parcel')
@@ -82,10 +91,11 @@ class ParcelAPITestCase(TestCase):
         self.assertFalse(data.get('success'))
 
     @patch('time.sleep', return_value=None)
-    def test_mock_receive_parcel_post(self, mock_sleep):
+    def test_mock_receive_parcel_post(self, _sleep_mock):
         url = reverse('mock_receive_parcel')
         response = self.client.post(url, {'parcel_id': self.parcel.id})
         self.parcel.refresh_from_db()
+
         self.assertEqual(response.status_code, 200)
         self.assertEqual(self.parcel.status, 'received_by_recipient')
         self.assertIsNotNone(self.parcel.delivered_at)

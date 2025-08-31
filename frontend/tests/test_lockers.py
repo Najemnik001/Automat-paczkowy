@@ -9,7 +9,7 @@ class LockerModelTest(TestCase):
         self.lock_large_occupied = Lock.objects.create(locker=self.locker, size="large", is_free=False)
 
     def test_str_method_locker(self):
-        self.assertEqual(str(self.locker), "Locker: LockerA at Warszawa")
+        self.assertEqual(str(self.locker), "Automat: LockerA adres: Warszawa")
 
     def test_get_free_locks(self):
         free_locks = self.locker.get_free_locks()
@@ -28,9 +28,9 @@ class LockModelTest(TestCase):
         self.lock = Lock.objects.create(locker=self.locker, size="small", is_free=True)
 
     def test_str_method_lock_free(self):
-        self.assertEqual(str(self.lock), f"Lock in {self.locker.name} (small) - Free")
+        self.assertEqual(str(self.lock), f"Lock in {self.locker.name} (small) - Wolna")
 
     def test_str_method_lock_occupied(self):
         self.lock.is_free = False
         self.lock.save()
-        self.assertEqual(str(self.lock), f"Lock in {self.locker.name} (small) - Occupied")
+        self.assertEqual(str(self.lock), f"Lock in {self.locker.name} (small) - Zajęta")

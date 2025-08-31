@@ -68,6 +68,10 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
+def is_client(user):
+    return user.is_authenticated and user.role == 'client'
+
+@user_passes_test(is_client)
 def create_parcel(request):
     lockers = Locker.objects.all()
 
@@ -104,6 +108,9 @@ def create_parcel(request):
 
 def is_admin(user):
     return user.is_authenticated and user.role == 'admin'
+
+def is_courier(user):
+    return user.is_authenticated and user.role == 'courier'
 
 
 
@@ -229,8 +236,6 @@ def delete_user(request, user_id):
     user.delete()
     return redirect('user_report')
 
-def is_courier(user):
-    return user.is_authenticated and user.role == 'courier'
 
 @user_passes_test(is_admin)
 def user_report(request):
@@ -347,7 +352,7 @@ def mock_pickup_by_courier(request):
             payload = {
                 "head": "Paczka w drodze!",
                 "body": f"Kurier odebrał twoją paczkę: '{parcel.name}'.",
-                "icon": "https://i.imgur.com/dRDxiCQ.png"
+                "url": "https://najemnik001.pythonanywhere.com/main_page/"
             }
 
             try:
@@ -381,8 +386,7 @@ def mock_deliver_to_machine(request):
             payload = {
                 "head": "Twoja paczka dotarła!",
                 "body": f"Paczka '{parcel.name}' czeka na odbiór w automacie: {parcel.sent_to_machine.name}",
-                "icon": "https://i.imgur.com/dRDxiCQ.png",
-                "url": "http://localhost:8000/main_page/"
+                "url": "https://najemnik001.pythonanywhere.com/main_page/"
             }
 
             try:
@@ -411,7 +415,7 @@ def mock_store_parcel(request):
                 payload = {
                     "head": "Twoja paczka jest już w automacie!",
                     "body": f"Paczka '{parcel.name}' od {parcel.sender.username} została umieszczona w automacie.",
-                    "icon": "https://i.imgur.com/dRDxiCQ.png"
+                    "url": "https://najemnik001.pythonanywhere.com/main_page/"
                 }
                 send_user_notification(user=parcel.receiver, payload=payload, ttl=1000)
 

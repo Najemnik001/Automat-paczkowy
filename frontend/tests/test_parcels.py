@@ -3,32 +3,31 @@ from django.contrib.auth import get_user_model
 from lockers.models import Locker
 from parcels.models import Parcel
 import random
-from users.models import CustomUser
 
 User = get_user_model()
 
 class ParcelModelTest(TestCase):
     def setUp(self):
-        self.sender = CustomUser.objects.create_user(
+        self.sender = User.objects.create_user(
             username="Jan",
             usersurname="Kowalski",
             email=f"sender{random.randint(1000, 9999)}@example.com",
             password="Test12345",
-            role="client"
+            role="client",
         )
-        self.receiver = CustomUser.objects.create_user(
+        self.receiver = User.objects.create_user(
             username="Anna",
             usersurname="Nowak",
             email=f"receiver{random.randint(1000, 9999)}@example.com",
             password="Test12345",
-            role="client"
+            role="client",
         )
-        self.courier = CustomUser.objects.create_user(
-            username="kurier",
+        self.courier = User.objects.create_user(
+            username="Kurier",
             usersurname="Abacki",
             email=f"courier{random.randint(1000, 9999)}@example.com",
             password="Test12345",
-            role="courier"
+            role="courier",
         )
 
         self.locker_from = Locker.objects.create(name="LockerA", location="Warszawa")
@@ -41,13 +40,13 @@ class ParcelModelTest(TestCase):
             package_size="small",
             courier_number=self.courier,
             sent_from_machine=self.locker_from,
-            sent_to_machine=self.locker_to
+            sent_to_machine=self.locker_to,
         )
 
     def test_str_method(self):
         self.assertEqual(
             str(self.parcel),
-            f"Parcel {self.parcel.name} from {self.sender.username} to {self.receiver.username}"
+            f"Paczka {self.parcel.name} od {self.sender.username} do {self.receiver.username}",
         )
 
     def test_default_status(self):
