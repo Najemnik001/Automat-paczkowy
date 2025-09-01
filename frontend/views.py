@@ -27,9 +27,7 @@ def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-
+            form.save()
             messages.success(request, "Rejestracja zakończona sukcesem! Możesz teraz się zalogować.")
             return redirect('login')
     else:
