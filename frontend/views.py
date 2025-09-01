@@ -18,7 +18,7 @@ from django.utils import timezone
 import time
 from webpush import send_user_notification
 from django.views.decorators.http import require_POST
-from parcels.models import ParcelCourierHistory, CourierAction
+from parcels.models import CourierAction
 
 User = settings.AUTH_USER_MODEL
 
