@@ -62,7 +62,6 @@ class ParcelAPITestCase(TestCase):
     @patch('time.sleep', return_value=None)
     def test_mock_deliver_to_machine_post(self, _sleep_mock, _notify_mock):
         self.client.force_login(self.courier)
-        # sensowny flow: najpierw paczka odebrana przez kuriera
         self.parcel.status = 'picked_up_by_courier'
         self.parcel.save()
 
