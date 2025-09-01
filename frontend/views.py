@@ -27,9 +27,7 @@ def register(request):
     if request.method == 'POST':
         form = RegisterForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            login(request, user)
-
+            form.save()
             messages.success(request, "Rejestracja zakończona sukcesem! Możesz teraz się zalogować.")
             return redirect('login')
     else:
@@ -51,6 +49,7 @@ def user_login(request):
     else:
         form = CustomAuthenticationForm()
     return render(request, 'login.html', {'form': form})
+
 @login_required
 def main_page(request):
     received_parcels = Parcel.objects.filter(receiver=request.user)
