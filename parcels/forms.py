@@ -22,7 +22,7 @@ class ParcelForm(forms.ModelForm):
 
     class Meta:
         model = Parcel
-        fields = ['name', 'package_size', 'sent_from_machine', 'sent_to_machine', 'receiver_email']  # <- receiver_email nie jest polem modelu!
+        fields = ['name', 'package_size', 'sent_from_machine', 'sent_to_machine', 'receiver_email']
 
     def clean_receiver_email(self):
         email = self.cleaned_data.get('receiver_email')

@@ -1,32 +1,26 @@
-"""
-Django settings for Automat_paczkowy project (PythonAnywhere / production).
-"""
-
 from pathlib import Path
 from decouple import config, Csv
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- Bezpieczeństwo / tryb ---
+
 SECRET_KEY = config('SECRET_KEY', default='fallback_secret_key')
 DEBUG = config('DJANGO_DEBUG', default=False, cast=bool)
 
-# Na PA: np. "Najemnik001.pythonanywhere.com"
+
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='Najemnik001.pythonanywhere.com', cast=Csv())
 CSRF_TRUSTED_ORIGINS = [f"https://{h}" for h in ALLOWED_HOSTS]
 
-# --- Aplikacje ---
+
 INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'rest_framework',
     'rest_framework.authtoken',
-
     'users',
     'lockers',
     'parcels',
@@ -64,7 +58,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'Automat_paczkowy.wsgi.application'
 
-# --- Baza danych: MySQL ---
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -80,7 +73,7 @@ DATABASES = {
     }
 }
 
-# --- Użytkownik / autoryzacja ---
+
 AUTH_USER_MODEL = 'users.CustomUser'
 
 AUTHENTICATION_BACKENDS = [
@@ -98,41 +91,38 @@ REST_FRAMEWORK = {
     ],
 }
 
-# --- WebPush ---
+
 WEBPUSH_SETTINGS = {
     "VAPID_PUBLIC_KEY": config("VAPID_PUBLIC_KEY", default=""),
     "VAPID_PRIVATE_KEY": config("VAPID_PRIVATE_KEY", default=""),
     "VAPID_ADMIN_EMAIL": config("VAPID_ADMIN_EMAIL", default="admin@example.com"),
 }
 
-# --- Internationalization ---
+
 LANGUAGE_CODE = 'pl'
 TIME_ZONE = 'Europe/Warsaw'
 USE_I18N = True
 USE_TZ = True
 
-# --- Pliki statyczne / media ---
+
 STATIC_URL = '/static/'
-STATIC_ROOT = BASE_DIR / 'staticfiles'   # wskażesz w zakładce Web → Static files
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# --- Ustawienia produkcyjne (HTTPS i security headers) ---
+
 if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
-
-    # HSTS włącz po potwierdzeniu, że wszystko działa na HTTPS
-    SECURE_HSTS_SECONDS = 0         # np. 31536000 po testach
+    SECURE_HSTS_SECONDS = 0
     SECURE_HSTS_INCLUDE_SUBDOMAINS = False
     SECURE_HSTS_PRELOAD = False
 
-# --- Logowanie do konsoli (wygodne na PA) ---
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
